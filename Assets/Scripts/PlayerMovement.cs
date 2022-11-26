@@ -19,13 +19,39 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float jumpForce;
     [Tooltip("The maximum number of jumps the player can do mid-air")]
     [SerializeField] int maxJumps;
+    [Header("Stamina")]
+    [SerializeField]
+    [Range(0f, 10f)]
+    public float maxStamina;
+    [SerializeField]
+    [Range(0f, 10f)]
+    private float sprintStaminaDrainRate;
+    [SerializeField]
+    [Range(0f, 10f)]
+    private float moveStaminaDrainRate;
+    [SerializeField]
+    [Range(0f, 10f)]
+    private float staminaRegenRate;
+    [SerializeField]
+    [Range(0f, 10f)]
+    private float jumpStaminaLoss;
+    [HideInInspector]
+    public float stamina;
 
     private float playerSpeed;
+    private bool isPlayerSprinting;
     private bool isPlayerMoving;
     private int jumpCounter = 0;
 
+    private void Start()
+    {
+        stamina = maxStamina;
+    }
+
     private void Update()
     {
+        isPlayerSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
         Jump();
         Sprint();
 
@@ -37,22 +63,35 @@ public class PlayerMovement : MonoBehaviour
 
         // Translate the player on a new Vector3, along the Horizontal and Vertical input axis, along the local axis
         if (isPlayerMoving)
+        {
             transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
+            if (!isPlayerSprinting)
+                stamina -= Time.deltaTime * moveStaminaDrainRate;
+        } 
 
     }
 
     public void Sprint()
     {
-        // ... and is holding down the shift key...
-        if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && isPlayerMoving)
+        // If the player is trying to sprint...
+        if (isPlayerSprinting && isPlayerMoving && stamina > 0f)
         {
-            // ... sprint...
-            playerSpeed = walkSpeed + sprintSpeed;
-            // ... and change the FOV...
-            Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov + sprintFov, fovSpeed);
+            stamina -= Time.deltaTime * sprintStaminaDrainRate;
+
+            if (stamina > 0f)
+            {
+                // ... sprint...
+                playerSpeed = walkSpeed + sprintSpeed;
+                // ... and change the FOV...
+                Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov + sprintFov, fovSpeed);
+            }
         }
         else
         {
+
+            if (stamina < maxStamina && !isPlayerMoving)
+                stamina += Time.deltaTime * staminaRegenRate;
+
             // ... or don't, if the shift key isn't being held down...
             playerSpeed = walkSpeed;
             // ... and reset the FOV
@@ -67,8 +106,10 @@ public class PlayerMovement : MonoBehaviour
         // If the player is jumping and hasn't jumped more than maxJumps...
         if (Input.GetButtonDown("Jump") && jumpCounter < maxJumps)
         {
+            //... jump
             playerRigidBody.AddForce(Vector3.up * jumpForce);
             jumpCounter++;
+            stamina -= jumpStaminaLoss;
         }
     }
 }
