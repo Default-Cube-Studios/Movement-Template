@@ -4,9 +4,11 @@ public class CameraRotation : MonoBehaviour
 {
     [Header("Mouse Sensitivity")]
     [Tooltip("The ratio between the X position of the mouse to the Y rotation of the player")]
-    [SerializeField][Range(1.0f,100.0f)] float horizontalSensitivity;
+    [SerializeField][Range(1.0f,100.0f)] 
+    float horizontalSensitivity;
     [Tooltip("The ratio between the Y position of the mouse to the X rotation of the camera")]
-    [SerializeField][Range(1.0f, 100.0f)] float verticalSensitivity;
+    [SerializeField][Range(1.0f, 100.0f)] 
+    float verticalSensitivity;
 
     private float rotationX = 0.0f, rotationY = 0.0f;
 

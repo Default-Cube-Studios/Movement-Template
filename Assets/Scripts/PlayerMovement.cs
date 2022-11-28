@@ -21,51 +21,43 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] int maxJumps;
     [Header("Stamina")]
     [SerializeField]
-    [Range(0f, 10f)]
-    public float maxStamina;
-    [SerializeField]
-    [Range(0f, 10f)]
+    [Range(0f, 1f)]
     private float sprintStaminaDrainRate;
     [SerializeField]
-    [Range(0f, 10f)]
+    [Range(0f, 1f)]
     private float moveStaminaDrainRate;
     [SerializeField]
-    [Range(0f, 10f)]
+    [Range(0f, 1f)]
     private float staminaRegenRate;
     [SerializeField]
-    [Range(0f, 10f)]
+    [Range(0f, 1f)]
     private float jumpStaminaLoss;
     [HideInInspector]
-    public float stamina;
+    public float stamina = 1f;
 
     private float playerSpeed;
     private bool isPlayerSprinting;
     private bool isPlayerMoving;
     private int jumpCounter = 0;
 
-    private void Start()
-    {
-        stamina = maxStamina;
-    }
-
     private void Update()
     {
-        isPlayerSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-        Jump();
-        Sprint();
-
         float horizontalAxis = Input.GetAxis("Horizontal");
         float verticalAxis = Input.GetAxis("Vertical");
 
+        isPlayerSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         isPlayerMoving = !(horizontalAxis == 0.0f) || !(verticalAxis == 0.0f);
 
+        Jump();
+        Sprint();
 
         // Translate the player on a new Vector3, along the Horizontal and Vertical input axis, along the local axis
         if (isPlayerMoving)
         {
             transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
-            if (!isPlayerSprinting)
+
+            // If the player isn't sprinting and we have stamina, reduce stamina by moveStaminaDrainRate
+            if (!isPlayerSprinting && stamina > moveStaminaDrainRate)
                 stamina -= Time.deltaTime * moveStaminaDrainRate;
         } 
 
@@ -73,26 +65,28 @@ public class PlayerMovement : MonoBehaviour
 
     public void Sprint()
     {
-        // If the player is trying to sprint...
-        if (isPlayerSprinting && isPlayerMoving && stamina > 0f)
+        // If the player is sprinting...
+        if (isPlayerSprinting && isPlayerMoving && stamina > sprintStaminaDrainRate)
         {
+            // Reduce stamina...
             stamina -= Time.deltaTime * sprintStaminaDrainRate;
 
+            // ... and if we still have some...
             if (stamina > 0f)
             {
                 // ... sprint...
                 playerSpeed = walkSpeed + sprintSpeed;
-                // ... and change the FOV...
+                // ... and change the FOV
                 Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov + sprintFov, fovSpeed);
             }
         }
         else
         {
-
-            if (stamina < maxStamina && !isPlayerMoving)
+            // Regenerate stamina if the player isn't moving
+            if (stamina < 1f && !isPlayerMoving)
                 stamina += Time.deltaTime * staminaRegenRate;
 
-            // ... or don't, if the shift key isn't being held down...
+            // ... reset playerSpeed...
             playerSpeed = walkSpeed;
             // ... and reset the FOV
             Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov, fovSpeed);
@@ -100,16 +94,20 @@ public class PlayerMovement : MonoBehaviour
     }
     public void Jump()
     {
+        // Reset the jumpCounter if player is on the ground
         if (Physics.Raycast(transform.position, Vector3.down, raycastDistance))
             jumpCounter = 0;
 
         // If the player is jumping and hasn't jumped more than maxJumps...
         if (Input.GetButtonDown("Jump") && jumpCounter < maxJumps)
         {
-            //... jump
+            //... jump...
             playerRigidBody.AddForce(Vector3.up * jumpForce);
             jumpCounter++;
-            stamina -= jumpStaminaLoss;
+
+            // ... and reduce stamina by jumpStaminaLoss
+            if (stamina > jumpStaminaLoss)
+                stamina -= jumpStaminaLoss;
         }
     }
 }
