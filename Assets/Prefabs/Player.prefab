@@ -157,20 +157,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerRigidBody: {fileID: 3197787293127228850}
+  mainCamera: {fileID: 3197787294231302120}
   walkSpeed: 5
-  lowStaminaSpeed: 3
+  lowStaminaSpeed: 1
   sprintSpeed: 12
   fovSpeed: 0.3
   defaultFov: 85
   sprintFov: 20
+  currentFov: 0
   raycastDistance: 1
-  jumpForce: 300
-  lowStaminaJumpForce: 100
+  jumpForce: 400
+  lowStaminaJumpForce: 200
   maxJumps: 3
-  sprintStaminaDrainRate: 0.3
-  moveStaminaDrainRate: 0.1
-  staminaRegenRate: 0.1
-  jumpStaminaLoss: 0.5
+  sprintStaminaDrainRate: 0.1
+  moveStaminaDrainRate: 0.05
+  staminaRegenRate: 0.2
+  jumpStaminaLoss: 0.1
   stamina: 1
   staminaCorrectionTolerance: 0.1
 --- !u!114 &3197787293127228851

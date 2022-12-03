@@ -1,19 +1,22 @@
 using UnityEngine;
 
+
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField]  Rigidbody playerRigidBody;
+    [SerializeField] Rigidbody playerRigidBody;
+    [SerializeField] Camera mainCamera;
     [Header("Movement Speed")]
-    [SerializeField]  float walkSpeed;
+    [SerializeField] float walkSpeed;
     [SerializeField] float lowStaminaSpeed;
     [Tooltip("The speed added onto the walkSpeed attribute while sprinting")]
-    [SerializeField]  float sprintSpeed;
+    [SerializeField] float sprintSpeed;
     [Header("Field of View")]
     [Tooltip("The speed of the transition between FOVs")]
     [SerializeField][Range(0f, 1f)] float fovSpeed;
     [SerializeField] float defaultFov;
     [Tooltip("The FOV added onto the defaultFov attribute while sprinting")]
     [SerializeField] float sprintFov;
+    [SerializeField] float currentFov;
     [Header("Jump")]
     [Tooltip("The distance of the ray used to identify if the player is on the ground (keep at player's Y scale)")]
     [SerializeField] float raycastDistance;
@@ -44,7 +47,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isPlayerMoving;
     private int jumpCounter = 0;
 
-    private void Update()
+    public void Update()
     {
         float horizontalAxis = Input.GetAxis("Horizontal");
         float verticalAxis = Input.GetAxis("Vertical");
@@ -52,22 +55,31 @@ public class PlayerMovement : MonoBehaviour
         isPlayerSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         isPlayerMoving = !(horizontalAxis == 0.0f) || !(verticalAxis == 0.0f);
 
-        Jump();
-        // Regenerate stamina if the player isn't moving
-        if (stamina < 1f && !isPlayerMoving)
-            stamina += Time.deltaTime * staminaRegenRate;
-        Sprint();
+        playerSpeed = walkSpeed;
 
-        // Translate the player on a new Vector3, along the Horizontal and Vertical input axis, along the local axis
+        // Reset the jumpCounter if player is on the ground
+        if (Physics.Raycast(transform.position, Vector3.down, raycastDistance))
+            jumpCounter = 0;
+        
+        Jump();
+
         if (isPlayerMoving)
         {
-            transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
+            if (isPlayerSprinting)
+                Sprint();
+            else
+                currentFov = defaultFov;
 
-            // If the player isn't sprinting and we have stamina, reduce stamina by moveStaminaDrainRate
-            if (stamina > staminaCorrectionTolerance)
-                stamina -= Time.deltaTime * moveStaminaDrainRate;
-        } 
+            MovePlayer(horizontalAxis, verticalAxis);
+        }
+        else
+        {
+            if (stamina < 1f)
+                stamina += Time.deltaTime * staminaRegenRate;
+            currentFov = defaultFov;
+        }
 
+        TransitionFov(mainCamera.fieldOfView, currentFov, fovSpeed);
     }
 
     public void Sprint()
@@ -75,45 +87,25 @@ public class PlayerMovement : MonoBehaviour
         if (stamina < staminaCorrectionTolerance)
         {
             playerSpeed = lowStaminaSpeed;
-            Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov, fovSpeed);
-
+            currentFov = defaultFov;
             return;
         }
 
-        // If the player is sprinting...
-        if (isPlayerSprinting && isPlayerMoving)
-        {
-            // Reduce stamina...
-            stamina -= Time.deltaTime * sprintStaminaDrainRate;
-
-            // ... and if we still have some...
-            if (stamina > 0f)
-            {
-                // ... sprint...
-                playerSpeed = walkSpeed + sprintSpeed;
-                // ... and change the FOV
-                Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov + sprintFov, fovSpeed);
-            }
-        } 
-        else
-        {
-            // ... reset playerSpeed...
-            playerSpeed = walkSpeed;
-            // ... and reset the FOV
-            Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFov, fovSpeed);
-        }
+        stamina -= Time.deltaTime * sprintStaminaDrainRate;
+        playerSpeed = walkSpeed + sprintSpeed;
+        currentFov = defaultFov + sprintFov;
     }
+
+    public void TransitionFov(float currentFov, float newFov, float speed)
+    {
+        mainCamera.fieldOfView = Mathf.Lerp(currentFov, newFov, speed);
+    }
+
     public void Jump()
     {
-        // Reset the jumpCounter if player is on the ground
-        if (Physics.Raycast(transform.position, Vector3.down, raycastDistance))
-            jumpCounter = 0;
-
-        // If the player is jumping and hasn't jumped more than maxJumps...
-        if (Input.GetButtonDown("Jump") && jumpCounter < maxJumps && stamina > jumpStaminaLoss)
+        if (Input.GetButtonDown("Jump") && jumpCounter < maxJumps)
         {
-            //... and jump...
-            if (stamina > staminaCorrectionTolerance)
+            if (stamina > staminaCorrectionTolerance && stamina > jumpStaminaLoss)
             {
                 playerRigidBody.AddForce(Vector3.up * jumpForce);
                 stamina -= jumpStaminaLoss;
@@ -123,5 +115,15 @@ public class PlayerMovement : MonoBehaviour
 
             jumpCounter++;
         }
+    }
+    public void MovePlayer(float horizontalAxis, float verticalAxis)
+    {
+        if (stamina > staminaCorrectionTolerance)
+            stamina -= Time.deltaTime * moveStaminaDrainRate;
+        else
+            playerSpeed = lowStaminaSpeed;
+
+        transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
+
     }
 }
