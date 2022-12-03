@@ -174,7 +174,7 @@ MonoBehaviour:
   staminaRegenRate: 0.2
   jumpStaminaLoss: 0.1
   stamina: 1
-  staminaCorrectionTolerance: 0.1
+  staminaCorrectionTolerance: 0.05
 --- !u!114 &3197787293127228851
 MonoBehaviour:
   m_ObjectHideFlags: 0
