@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 public class PlayerMovement : MonoBehaviour
 {
+    #region Variable Initials
     [SerializeField] Rigidbody playerRigidBody;
     [SerializeField] Camera mainCamera;
     [Header("Movement Speed")]
@@ -46,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isPlayerSprinting;
     private bool isPlayerMoving;
     private int jumpCounter = 0;
+    #endregion
 
     public void Update()
     {
@@ -126,4 +129,6 @@ public class PlayerMovement : MonoBehaviour
         transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
 
     }
+
+
 }
