@@ -3,15 +3,20 @@ using UnityEngine.InputSystem;
 
 public class CameraRotation : MonoBehaviour
 {
+    [SerializeField] GameObject playerGameObject;
+    [SerializeField] Camera mainCamera;
     [Header("Mouse Sensitivity")]
     [Tooltip("The ratio between the X position of the mouse to the Y rotation of the player")]
-    [SerializeField][Range(1.0f,100.0f)] 
+    [SerializeField][Range(0f,100f)] 
     float horizontalSensitivity;
     [Tooltip("The ratio between the Y position of the mouse to the X rotation of the camera")]
-    [SerializeField][Range(1.0f, 100.0f)] 
+    [SerializeField][Range(0f, 100f)] 
     float verticalSensitivity;
 
-    private float rotationX = 0.0f, rotationY = 0.0f;
+    private float rotationX, rotationY;
+    private Vector2 cameraInput = Vector2.zero;
+    private Vector2 cameraInputRaw = Vector2.zero;
+    [SerializeField] float inputSmoothing;
 
     void Start()
     {
@@ -22,13 +27,19 @@ public class CameraRotation : MonoBehaviour
 
     void Update()
     {
+        cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * inputSmoothing);
+
         // Change rotationX by the position of the mouse, and clamp it to 90 degrees
-        rotationX -= Input.GetAxisRaw("Mouse Y") * Time.deltaTime * verticalSensitivity;
+        rotationX -= cameraInput.y * Time.deltaTime * verticalSensitivity;
         rotationX = Mathf.Clamp(rotationX, -90f, 90f);
         // Change rotationY by the position of the mouse
-        rotationY += Input.GetAxisRaw("Mouse X") * Time.deltaTime * horizontalSensitivity;
+        rotationY += cameraInput.x * Time.deltaTime * horizontalSensitivity;
         // Rotate the main camera and the player, by the X and Y axis
-        Camera.main.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-        transform.localRotation = Quaternion.Euler(0, rotationY, 0);
+        mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+        playerGameObject.transform.localRotation = Quaternion.Euler(0, rotationY, 0);
+    }
+    public void OnLook(InputAction.CallbackContext value)
+    {
+        cameraInput = value.ReadValue<Vector2>();
     }
 }
