@@ -65,7 +65,7 @@ public class PlayerMovement : MonoBehaviour
         
         if (!(movementInput == Vector2.zero))
         {
-            if (!(sprintInput == 0.0f))
+            if (!(sprintInput == 0.0f) && stamina > staminaCorrectionTolerance)
                 Sprint();
             
             MovePlayer();
@@ -99,9 +99,6 @@ public class PlayerMovement : MonoBehaviour
     }
     public void Sprint()
     {
-        if (stamina < staminaCorrectionTolerance)
-            return;
-        
         stamina -= Time.deltaTime * sprintStaminaDrainRate;
         playerSpeed = walkSpeed + sprintSpeed;
         currentFov = defaultFov + sprintFov;

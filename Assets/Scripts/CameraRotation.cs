@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class CameraRotation : MonoBehaviour
 {
+    #region Variable Initials
     [SerializeField] GameObject playerGameObject;
     [SerializeField] Camera mainCamera;
     [Header("Mouse Sensitivity")]
@@ -17,6 +18,7 @@ public class CameraRotation : MonoBehaviour
     private Vector2 cameraInput = Vector2.zero;
     private Vector2 cameraInputRaw = Vector2.zero;
     [SerializeField] float inputSmoothing;
+    #endregion
 
     void Start()
     {
@@ -24,7 +26,6 @@ public class CameraRotation : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
-
     void Update()
     {
         cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * inputSmoothing);
@@ -38,6 +39,7 @@ public class CameraRotation : MonoBehaviour
         mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
         playerGameObject.transform.localRotation = Quaternion.Euler(0, rotationY, 0);
     }
+
     public void OnLook(InputAction.CallbackContext value)
     {
         cameraInput = value.ReadValue<Vector2>();
