@@ -157,6 +157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerRigidBody: {fileID: 3197787293127228850}
+  playerGameObject: {fileID: 3197787293127228857}
   mainCamera: {fileID: 3197787294231302120}
   walkSpeed: 5
   lowStaminaSpeed: 1
