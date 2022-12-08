@@ -46,7 +46,6 @@ public class PlayerMovement : MonoBehaviour
     private float staminaCorrectionTolerance;
 
     private float playerSpeed;
-    private bool isPlayerSprinting;
     private bool isPlayerMoving;
     private int jumpCounter;
     private Vector2 movementInput = Vector2.zero;
@@ -54,8 +53,10 @@ public class PlayerMovement : MonoBehaviour
     private float sprintInput;
     #endregion
 
-    public void Update()
+    public void FixedUpdate()
     {
+        isPlayerMoving = (movementInputRaw == Vector2.zero);
+
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
         playerSpeed = walkSpeed;
 
@@ -69,9 +70,10 @@ public class PlayerMovement : MonoBehaviour
             
             MovePlayer();
         }
-        else
+        
+        if (isPlayerMoving)
         {
-            if (stamina < 1f)
+            if (stamina < 1f) 
                 stamina += Time.deltaTime * staminaRegenRate;
             currentFov = defaultFov;
         }
