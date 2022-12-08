@@ -95,7 +95,7 @@ public class PlayerMovement : MonoBehaviour
             currentFov = defaultFov;
         }
 
-        transform.Translate(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed));
+        playerRigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
     }
     public void Sprint()
     {
