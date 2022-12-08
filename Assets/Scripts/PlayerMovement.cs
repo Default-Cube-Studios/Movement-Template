@@ -1,8 +1,9 @@
 using UnityEngine;
-
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    #region Variable Initials
     [SerializeField] Rigidbody playerRigidBody;
     [SerializeField] Camera mainCamera;
     [Header("Movement Speed")]
@@ -10,6 +11,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float lowStaminaSpeed;
     [Tooltip("The speed added onto the walkSpeed attribute while sprinting")]
     [SerializeField] float sprintSpeed;
+    [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")]
+    [SerializeField] float inputSmoothing;
     [Header("Field of View")]
     [Tooltip("The speed of the transition between FOVs")]
     [SerializeField][Range(0f, 1f)] float fovSpeed;
@@ -43,65 +46,73 @@ public class PlayerMovement : MonoBehaviour
     private float staminaCorrectionTolerance;
 
     private float playerSpeed;
-    private bool isPlayerSprinting;
     private bool isPlayerMoving;
-    private int jumpCounter = 0;
+    private int jumpCounter;
+    private Vector2 movementInput = Vector2.zero;
+    private Vector2 movementInputRaw = Vector2.zero;
+    private float sprintInput;
+    #endregion
 
-    public void Update()
+    public void FixedUpdate()
     {
-        float horizontalAxis = Input.GetAxis("Horizontal");
-        float verticalAxis = Input.GetAxis("Vertical");
+        isPlayerMoving = (movementInputRaw == Vector2.zero);
 
-        isPlayerSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-        isPlayerMoving = !(horizontalAxis == 0.0f) || !(verticalAxis == 0.0f);
-
+        movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
         playerSpeed = walkSpeed;
 
-        // Reset the jumpCounter if player is on the ground
         if (Physics.Raycast(transform.position, Vector3.down, raycastDistance))
             jumpCounter = 0;
         
-        Jump();
-
+        if (!(movementInput == Vector2.zero))
+        {
+            if (!(sprintInput == 0.0f) && stamina > staminaCorrectionTolerance)
+                Sprint();
+            
+            MovePlayer();
+        }
+        
         if (isPlayerMoving)
         {
-            if (isPlayerSprinting)
-                Sprint();
-            else
-                currentFov = defaultFov;
-
-            MovePlayer(horizontalAxis, verticalAxis);
-        }
-        else
-        {
-            if (stamina < 1f)
+            if (stamina < 1f) 
                 stamina += Time.deltaTime * staminaRegenRate;
             currentFov = defaultFov;
         }
 
-        TransitionFov(mainCamera.fieldOfView, currentFov, fovSpeed);
+        mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, currentFov, fovSpeed);
     }
 
-    public void Sprint()
+    public void MovePlayer()
     {
+        if (stamina > staminaCorrectionTolerance)
+            stamina -= Time.deltaTime * moveStaminaDrainRate;
+
+        if (!(sprintInput == 1f))
+            currentFov = defaultFov;
+
         if (stamina < staminaCorrectionTolerance)
         {
             playerSpeed = lowStaminaSpeed;
             currentFov = defaultFov;
-            return;
         }
 
+        playerRigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
+    }
+    public void Sprint()
+    {
         stamina -= Time.deltaTime * sprintStaminaDrainRate;
         playerSpeed = walkSpeed + sprintSpeed;
         currentFov = defaultFov + sprintFov;
     }
 
-    public void TransitionFov(float currentFov, float newFov, float speed)
+    public void OnMove(InputAction.CallbackContext value)
     {
-        mainCamera.fieldOfView = Mathf.Lerp(currentFov, newFov, speed);
+        movementInputRaw = value.ReadValue<Vector2>();
     }
-
-    public void Jump()
+    public void OnSprint(InputAction.CallbackContext value)
+    {
+        sprintInput = value.ReadValue<float>();
+    }
+    public void OnJump(InputAction.CallbackContext value)
     {
         if (Input.GetButtonDown("Jump") && jumpCounter < maxJumps)
         {
@@ -115,15 +126,5 @@ public class PlayerMovement : MonoBehaviour
 
             jumpCounter++;
         }
-    }
-    public void MovePlayer(float horizontalAxis, float verticalAxis)
-    {
-        if (stamina > staminaCorrectionTolerance)
-            stamina -= Time.deltaTime * moveStaminaDrainRate;
-        else
-            playerSpeed = lowStaminaSpeed;
-
-        transform.Translate(new Vector3(horizontalAxis * Time.deltaTime * playerSpeed, 0, verticalAxis * Time.deltaTime * playerSpeed));
-
-    }
+    } 
 }
