@@ -156,8 +156,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afca2c248d4502c46a5d8550405bc321, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerRigidBody: {fileID: 3197787293127228850}
-  playerGameObject: {fileID: 3197787293127228857}
+  globalRigidBody: {fileID: 3197787293127228850}
+  globalGameObject: {fileID: 3197787293127228857}
   mainCamera: {fileID: 3197787294231302120}
   walkSpeed: 5
   lowStaminaSpeed: 1
@@ -175,7 +175,6 @@ MonoBehaviour:
   moveStaminaDrainRate: 0.05
   staminaRegenRate: 0.2
   jumpStaminaLoss: 0.1
-  stamina: 1
   staminaCorrectionTolerance: 0.05
 --- !u!114 &3197787293127228851
 MonoBehaviour:
