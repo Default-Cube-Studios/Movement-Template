@@ -31,20 +31,21 @@ public class PlayerClass
     public GameObject gameObject;
     public Camera mainCamera;
 
-    public void MovePlayer(float moveStaminaDrainRate, Vector2 movementInput)
+    public void MovePlayer(float staminaDrain, Vector2 movementInput)
     {
-        stamina -= Time.deltaTime * moveStaminaDrainRate;
+        if (stamina > staminaDrain)
+            stamina -= Time.deltaTime * staminaDrain;
         rigidBody.MovePosition(gameObject.transform.position + gameObject.transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
     }
-    public void Sprint(float sprintStaminaDrainRate, float walkSpeed, float sprintSpeed)
+    public void Sprint(float staminaDrain, float speed)
     {
-        stamina -= Time.deltaTime * sprintStaminaDrainRate;
-        playerSpeed = walkSpeed + sprintSpeed;
+        stamina -= Time.deltaTime * staminaDrain;
+        playerSpeed = speed;
     }
-    public void Jump(float jumpForce, float jumpStaminaLoss)
+    public void Jump(float jumpForce, float staminaLoss)
     {
         rigidBody.AddForce(Vector3.up * jumpForce);
-        stamina -= jumpStaminaLoss;
+        stamina -= staminaLoss;
         jumpCounter++;
     }
 }

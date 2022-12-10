@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Speed")]
     [SerializeField] float walkSpeed;
     [Tooltip("The player speed while low on stamina")][SerializeField] float lowStaminaSpeed;
-    [Tooltip("The speed added onto the walkSpeed attribute while sprinting")][SerializeField] float sprintSpeed;
+    [Tooltip("The player speed while sprinting")][SerializeField] float sprintSpeed;
     [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")][SerializeField] float inputSmoothing;
 
     [Header("Field of View")]
@@ -56,7 +56,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > staminaCorrectionTolerance)
             {
-                Player.PlayerObject.Sprint(sprintStaminaDrainRate, walkSpeed, sprintSpeed);
+                Player.PlayerObject.Sprint(sprintStaminaDrainRate, sprintSpeed);
                 currentFov = defaultFov + sprintFov;
             }
             else

@@ -3356,7 +3356,7 @@ MonoBehaviour:
   mainCamera: {fileID: 612575578}
   horizontalSensitivity: 3
   verticalSensitivity: 3
-  inputSmoothing: 5
+  inputSmoothing: 7.5
 --- !u!114 &2023235367
 MonoBehaviour:
   m_ObjectHideFlags: 0
