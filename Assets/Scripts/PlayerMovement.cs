@@ -4,9 +4,8 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     #region Variable Initials
-    [SerializeField] Rigidbody globalRigidBody;
-    [SerializeField] GameObject globalGameObject;
-    [SerializeField] Camera mainCamera;
+    [HideInInspector] public GameObject playerGameObject;
+    [HideInInspector] public Rigidbody rigidBody;
 
     [Header("Movement Speed")]
     [SerializeField] float walkSpeed;
@@ -37,29 +36,27 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
     private float sprintInput;
-
-    public Player PlayerObject = new Player();
     #endregion
 
     public void Awake()
     {
-        PlayerObject.rigidBody = globalRigidBody;
-        PlayerObject.gameObject = globalGameObject;
+        rigidBody = Player.PlayerObject.rigidBody;
+        playerGameObject = Player.PlayerObject.gameObject;
     }
 
     public void Update()
     {
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
-        PlayerObject.playerSpeed = walkSpeed;
+        Player.PlayerObject.playerSpeed = walkSpeed;
 
-        if (Physics.Raycast(transform.position, Vector3.down, raycastDistance))
-            PlayerObject.jumpCounter = 0;
+        if (Physics.Raycast(gameObject.transform.position, Vector3.down, raycastDistance))
+            Player.PlayerObject.jumpCounter = 0;
 
         if (!(movementInput == Vector2.zero))
         {
-            if (!(sprintInput == 0.0f) && PlayerObject.stamina > staminaCorrectionTolerance)
+            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > staminaCorrectionTolerance)
             {
-                PlayerObject.Sprint(sprintStaminaDrainRate, walkSpeed, sprintSpeed);
+                Player.PlayerObject.Sprint(sprintStaminaDrainRate, walkSpeed, sprintSpeed);
                 currentFov = defaultFov + sprintFov;
             }
             else
@@ -67,20 +64,20 @@ public class PlayerMovement : MonoBehaviour
                 currentFov = defaultFov;
             }
 
-            if (PlayerObject.stamina < staminaCorrectionTolerance)
-                PlayerObject.playerSpeed = lowStaminaSpeed;
+            if (Player.PlayerObject.stamina < staminaCorrectionTolerance)
+                Player.PlayerObject.playerSpeed = lowStaminaSpeed;
 
-            PlayerObject.MovePlayer(moveStaminaDrainRate, movementInput);
+            Player.PlayerObject.MovePlayer(moveStaminaDrainRate, movementInput);
         }
         
         if (movementInputRaw == Vector2.zero)
         {
-            if (PlayerObject.stamina < 1f)
-                PlayerObject.stamina += Time.deltaTime * staminaRegenRate;
+            if (Player.PlayerObject.stamina < 1f)
+                Player.PlayerObject.stamina += Time.deltaTime * staminaRegenRate;
             currentFov = defaultFov;
         }
 
-        mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, currentFov, fovSpeed);
+        Player.PlayerObject.mainCamera.fieldOfView = Mathf.Lerp(Player.PlayerObject.mainCamera.fieldOfView, currentFov, fovSpeed);
     }
 
     public void OnMove(InputAction.CallbackContext value)
@@ -93,42 +90,16 @@ public class PlayerMovement : MonoBehaviour
     }
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (PlayerObject.jumpCounter < maxJumps)
+        if (Player.PlayerObject.jumpCounter < maxJumps && value.performed)
         {
-            if (PlayerObject.stamina > jumpStaminaLoss + staminaCorrectionTolerance)
+            if (Player.PlayerObject.stamina > jumpStaminaLoss + staminaCorrectionTolerance)
             {
-                PlayerObject.Jump(jumpForce, jumpStaminaLoss);
+                Player.PlayerObject.Jump(jumpForce, jumpStaminaLoss);
             }
             else
             {
-                PlayerObject.Jump(lowStaminaJumpForce, 0);
+                Player.PlayerObject.Jump(lowStaminaJumpForce, 0);
             }
-        }
-    }
-
-    public class Player
-    {
-        public float stamina = 1f;
-        public float playerSpeed;
-        public int jumpCounter;
-        public Rigidbody rigidBody;
-        public GameObject gameObject;
-
-        public void MovePlayer(float moveStaminaDrainRate, Vector2 movementInput)
-        {
-            stamina -= Time.deltaTime * moveStaminaDrainRate;
-            rigidBody.MovePosition(gameObject.transform.position + gameObject.transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
-        }
-        public void Sprint(float sprintStaminaDrainRate, float walkSpeed, float sprintSpeed)
-        {
-            stamina -= Time.deltaTime * sprintStaminaDrainRate;
-            playerSpeed = walkSpeed + sprintSpeed;
-        }
-        public void Jump(float jumpForce, float jumpStaminaLoss)
-        {
-            rigidBody.AddForce(Vector3.up * jumpForce);
-            stamina -= jumpStaminaLoss;
-            jumpCounter++;
         }
     }
 }

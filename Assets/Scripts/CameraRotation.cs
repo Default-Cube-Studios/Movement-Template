@@ -42,6 +42,6 @@ public class CameraRotation : MonoBehaviour
 
     public void OnLook(InputAction.CallbackContext value)
     {
-        cameraInput = value.ReadValue<Vector2>();
+        cameraInputRaw = value.ReadValue<Vector2>();
     }
 }
