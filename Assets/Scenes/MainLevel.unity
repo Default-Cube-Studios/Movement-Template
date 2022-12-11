@@ -2755,7 +2755,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0.5.0-alpha
+  m_text: 0.5.1-alpha
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 77fc8fa2953f7c347bece47cc4f225ed, type: 2}
   m_sharedMaterial: {fileID: -5122294608704971278, guid: 77fc8fa2953f7c347bece47cc4f225ed, type: 2}
@@ -3872,7 +3872,6 @@ MonoBehaviour:
   moveStaminaDrainRate: 0.05
   staminaRegenRate: 0.2
   jumpStaminaLoss: 0.1
-  staminaCorrectionTolerance: 0.05
 --- !u!114 &2023235368
 MonoBehaviour:
   m_ObjectHideFlags: 0

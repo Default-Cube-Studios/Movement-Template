@@ -53,9 +53,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (!(movementInput == Vector2.zero))
         {
-            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > 0f)
+            float staminaDrain = moveStaminaDrainRate;
+
+            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > 0.0f)
             {
-                Player.PlayerObject.stamina -= Time.deltaTime * sprintStaminaDrainRate;
+                staminaDrain += Time.deltaTime * sprintStaminaDrainRate;
                 Player.PlayerObject.playerSpeed = sprintSpeed;
                 currentFov = defaultFov + sprintFov;
             }
@@ -64,15 +66,15 @@ public class PlayerMovement : MonoBehaviour
                 currentFov = defaultFov;
             }
 
-            if (Player.PlayerObject.stamina < 0f)
+            if (Player.PlayerObject.stamina < 0.0f)
                 Player.PlayerObject.playerSpeed = lowStaminaSpeed;
 
-            Player.PlayerObject.MovePlayer(moveStaminaDrainRate, movementInput);
+            Player.PlayerObject.MovePlayer(staminaDrain, movementInput);
         }
         
         if (movementInputRaw == Vector2.zero)
         {
-            if (Player.PlayerObject.stamina < 1f)
+            if (Player.PlayerObject.stamina < 1.0f)
                 Player.PlayerObject.stamina += Time.deltaTime * staminaRegenRate;
             currentFov = defaultFov;
         }
@@ -98,7 +100,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else
             {
-                Player.PlayerObject.Jump(lowStaminaJumpForce, 0);
+                Player.PlayerObject.Jump(lowStaminaJumpForce, 0.0f);
             }
         }
     }

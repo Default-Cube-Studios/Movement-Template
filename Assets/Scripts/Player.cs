@@ -34,7 +34,7 @@ public class PlayerClass
 
     public void MovePlayer(float staminaDrain, Vector2 movementInput)
     {
-        if (stamina > staminaDrain)
+        if (stamina > 0.0f)
             stamina -= Time.deltaTime * staminaDrain;
         rigidBody.MovePosition(gameObject.transform.position + gameObject.transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
     }
