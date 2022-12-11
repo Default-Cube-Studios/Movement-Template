@@ -31,7 +31,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][Range(0f, 1f)] private float moveStaminaDrainRate;
     [SerializeField][Range(0f, 1f)] private float staminaRegenRate;
     [SerializeField][Range(0f, 1f)] private float jumpStaminaLoss;
-    [SerializeField][Range(0f, 1f)] private float staminaCorrectionTolerance;
 
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
@@ -54,9 +53,10 @@ public class PlayerMovement : MonoBehaviour
 
         if (!(movementInput == Vector2.zero))
         {
-            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > staminaCorrectionTolerance)
+            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > 0f)
             {
-                Player.PlayerObject.Sprint(sprintStaminaDrainRate, sprintSpeed);
+                Player.PlayerObject.stamina -= Time.deltaTime * sprintStaminaDrainRate;
+                Player.PlayerObject.playerSpeed = sprintSpeed;
                 currentFov = defaultFov + sprintFov;
             }
             else
@@ -64,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
                 currentFov = defaultFov;
             }
 
-            if (Player.PlayerObject.stamina < staminaCorrectionTolerance)
+            if (Player.PlayerObject.stamina < 0f)
                 Player.PlayerObject.playerSpeed = lowStaminaSpeed;
 
             Player.PlayerObject.MovePlayer(moveStaminaDrainRate, movementInput);
@@ -92,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Player.PlayerObject.jumpCounter < maxJumps && value.performed)
         {
-            if (Player.PlayerObject.stamina > jumpStaminaLoss + staminaCorrectionTolerance)
+            if (Player.PlayerObject.stamina > jumpStaminaLoss)
             {
                 Player.PlayerObject.Jump(jumpForce, jumpStaminaLoss);
             }

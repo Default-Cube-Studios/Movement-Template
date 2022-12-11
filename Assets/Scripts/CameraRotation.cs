@@ -22,7 +22,6 @@ public class CameraRotation : MonoBehaviour
 
     void Start()
     {
-        // Lock and hide the cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -30,12 +29,10 @@ public class CameraRotation : MonoBehaviour
     {
         cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * inputSmoothing);
 
-        // Change rotationX by the position of the mouse, and clamp it to 90 degrees
         rotationX -= cameraInput.y * Time.deltaTime * verticalSensitivity;
         rotationX = Mathf.Clamp(rotationX, -90f, 90f);
-        // Change rotationY by the position of the mouse
         rotationY += cameraInput.x * Time.deltaTime * horizontalSensitivity;
-        // Rotate the main camera and the player, by the X and Y axis
+
         mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
         playerGameObject.transform.localRotation = Quaternion.Euler(0, rotationY, 0);
     }

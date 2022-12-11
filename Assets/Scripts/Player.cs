@@ -27,6 +27,7 @@ public class PlayerClass
     public float stamina = 1f;
     public float playerSpeed;
     public int jumpCounter;
+    public float health = 1f;
     public Rigidbody rigidBody;
     public GameObject gameObject;
     public Camera mainCamera;
@@ -36,11 +37,6 @@ public class PlayerClass
         if (stamina > staminaDrain)
             stamina -= Time.deltaTime * staminaDrain;
         rigidBody.MovePosition(gameObject.transform.position + gameObject.transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
-    }
-    public void Sprint(float staminaDrain, float speed)
-    {
-        stamina -= Time.deltaTime * staminaDrain;
-        playerSpeed = speed;
     }
     public void Jump(float jumpForce, float staminaLoss)
     {
