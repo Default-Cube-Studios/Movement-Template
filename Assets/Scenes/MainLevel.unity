@@ -770,7 +770,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.16003418, y: -0.000030517578}
+  m_AnchoredPosition: {x: -0.16003418, y: 0}
   m_SizeDelta: {x: -0.31998, y: 0.00012207}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &380526865
@@ -1491,6 +1491,7 @@ GameObject:
   - component: {fileID: 578630264}
   - component: {fileID: 578630267}
   - component: {fileID: 578630266}
+  - component: {fileID: 578630268}
   - component: {fileID: 578630265}
   m_Layer: 5
   m_Name: Respawn
@@ -1602,6 +1603,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 578630263}
   m_CullTransparentMesh: 1
+--- !u!114 &578630268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578630263}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 649539e5814a4404885fa40cd74b1304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &612575577
 GameObject:
   m_ObjectHideFlags: 0
@@ -1643,7 +1656,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.2
+  near clip plane: 0.15
   far clip plane: 1000
   field of view: 80
   orthographic: 0
@@ -2205,6 +2218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sliderObject: {fileID: 790896702}
+  smoothing: 10
 --- !u!1 &803648979
 GameObject:
   m_ObjectHideFlags: 0
@@ -2755,7 +2769,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0.5.1-alpha
+  m_text: 0.5.2-alpha
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 77fc8fa2953f7c347bece47cc4f225ed, type: 2}
   m_sharedMaterial: {fileID: -5122294608704971278, guid: 77fc8fa2953f7c347bece47cc4f225ed, type: 2}
@@ -2951,6 +2965,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sliderObject: {fileID: 1307057941}
+  smoothing: 10
 --- !u!1 &1404729019
 GameObject:
   m_ObjectHideFlags: 0
@@ -3171,7 +3186,7 @@ GameObject:
   - component: {fileID: 1563430027}
   - component: {fileID: 1563430026}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Respawn Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3661,12 +3676,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2023235371}
-  - component: {fileID: 2023235370}
   - component: {fileID: 2023235369}
+  - component: {fileID: 2023235365}
   - component: {fileID: 2023235368}
+  - component: {fileID: 2023235372}
   - component: {fileID: 2023235367}
   - component: {fileID: 2023235366}
-  - component: {fileID: 2023235365}
   - component: {fileID: 2023235364}
   m_Layer: 0
   m_Name: Player
@@ -3823,7 +3838,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 0
   m_CollisionDetection: 2
 --- !u!114 &2023235366
 MonoBehaviour:
@@ -3854,8 +3869,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afca2c248d4502c46a5d8550405bc321, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerGameObject: {fileID: 0}
-  rigidBody: {fileID: 0}
   walkSpeed: 5
   lowStaminaSpeed: 1
   sprintSpeed: 12
@@ -3892,6 +3905,9 @@ MonoBehaviour:
     playerSpeed: 5
     jumpCounter: 0
     health: 1
+    isPlayerOnGround: 0
+    isPlayerMoving: 0
+    isPlayerJumping: 0
     rigidBody: {fileID: 0}
     gameObject: {fileID: 0}
     mainCamera: {fileID: 0}
@@ -3909,14 +3925,6 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!33 &2023235370
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2023235362}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &2023235371
 Transform:
   m_ObjectHideFlags: 0
@@ -3934,6 +3942,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2023235372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2023235362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 744eb0b7d197b3e46a3f92e48eb49f44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageRegenRate: 0.05
+  minimumFallForce: 6
+  forceExponent: 7
+  forceDivider: 5000000
 --- !u!114 &2094774926
 MonoBehaviour:
   m_ObjectHideFlags: 0

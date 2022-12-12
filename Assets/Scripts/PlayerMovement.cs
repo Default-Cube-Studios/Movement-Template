@@ -4,10 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     #region Variable Initials
-    [HideInInspector] public GameObject playerGameObject;
-    [HideInInspector] public Rigidbody rigidBody;
-
-    [Header("Movement Speed")]
+    [Header("Movement")]
     [SerializeField] float walkSpeed;
     [Tooltip("The player speed while low on stamina")][SerializeField] float lowStaminaSpeed;
     [Tooltip("The player speed while sprinting")][SerializeField] float sprintSpeed;
@@ -20,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float currentFov;
 
     [Header("Jump")]
-    [Tooltip("The distance of the ray used to identify if the player is on the ground (keep at player's Y scale)")][SerializeField] float raycastDistance;
+    [Tooltip("The distance of the ray used to identify if the player is on the ground (keep at player's Y scale)")] public float raycastDistance;
     [SerializeField] float jumpForce;
     [SerializeField] float lowStaminaJumpForce;
     [Tooltip("The maximum number of jumps the player can do mid-air")][SerializeField] int maxJumps;
@@ -28,28 +25,19 @@ public class PlayerMovement : MonoBehaviour
     [Header("Stamina")]
     [SerializeField]
     [Range(0f, 1f)] private float sprintStaminaDrainRate;
-    [SerializeField][Range(0f, 1f)] private float moveStaminaDrainRate;
-    [SerializeField][Range(0f, 1f)] private float staminaRegenRate;
-    [SerializeField][Range(0f, 1f)] private float jumpStaminaLoss;
+    [SerializeField][Range(0.0f, 1.0f)] private float moveStaminaDrainRate;
+    [SerializeField][Range(0.0f, 1.0f)] private float staminaRegenRate;
+    [SerializeField][Range(0.0f, 1.0f)] private float jumpStaminaLoss;
 
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
     private float sprintInput;
     #endregion
 
-    public void Awake()
-    {
-        rigidBody = Player.PlayerObject.rigidBody;
-        playerGameObject = Player.PlayerObject.gameObject;
-    }
-
     public void Update()
     {
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
         Player.PlayerObject.playerSpeed = walkSpeed;
-
-        if (Physics.Raycast(gameObject.transform.position, Vector3.down, raycastDistance))
-            Player.PlayerObject.jumpCounter = 0;
 
         if (!(movementInput == Vector2.zero))
         {
@@ -69,17 +57,32 @@ public class PlayerMovement : MonoBehaviour
             if (Player.PlayerObject.stamina < 0.0f)
                 Player.PlayerObject.playerSpeed = lowStaminaSpeed;
 
-            Player.PlayerObject.MovePlayer(staminaDrain, movementInput);
+            Player.PlayerObject.Move(staminaDrain, movementInput);
         }
         
+
         if (movementInputRaw == Vector2.zero)
         {
             if (Player.PlayerObject.stamina < 1.0f)
                 Player.PlayerObject.stamina += Time.deltaTime * staminaRegenRate;
             currentFov = defaultFov;
+            Player.PlayerObject.isPlayerMoving = false;
         }
+        else
+            Player.PlayerObject.isPlayerMoving = true;
+
 
         Player.PlayerObject.mainCamera.fieldOfView = Mathf.Lerp(Player.PlayerObject.mainCamera.fieldOfView, currentFov, fovSpeed);
+    }
+    public void FixedUpdate()
+    {
+        if (Physics.Raycast(gameObject.transform.position, Vector3.down, raycastDistance))
+        {
+            Player.PlayerObject.isPlayerOnGround = true;
+            Player.PlayerObject.jumpCounter = 0;
+        }
+        else
+            Player.PlayerObject.isPlayerOnGround = false;
     }
 
     public void OnMove(InputAction.CallbackContext value)
@@ -94,6 +97,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Player.PlayerObject.jumpCounter < maxJumps && value.performed)
         {
+            Player.PlayerObject.isPlayerJumping = true;
             if (Player.PlayerObject.stamina > jumpStaminaLoss)
             {
                 Player.PlayerObject.Jump(jumpForce, jumpStaminaLoss);
@@ -103,5 +107,7 @@ public class PlayerMovement : MonoBehaviour
                 Player.PlayerObject.Jump(lowStaminaJumpForce, 0.0f);
             }
         }
+        else
+            Player.PlayerObject.isPlayerJumping = false;
     }
 }
