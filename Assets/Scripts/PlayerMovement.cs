@@ -1,13 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
     #region Variable Initials
-    [HideInInspector] public GameObject playerGameObject;
-    [HideInInspector] public Rigidbody rigidBody;
-
-    [Header("Movement Speed")]
+    [Header("Movement")]
     [SerializeField] float walkSpeed;
     [Tooltip("The player speed while low on stamina")][SerializeField] float lowStaminaSpeed;
     [Tooltip("The player speed while sprinting")][SerializeField] float sprintSpeed;
@@ -20,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float currentFov;
 
     [Header("Jump")]
-    [Tooltip("The distance of the ray used to identify if the player is on the ground (keep at player's Y scale)")][SerializeField] float raycastDistance;
+    [Tooltip("A set of tags attatched to platforms and ground objects")][SerializeField] string[] groundTags;
     [SerializeField] float jumpForce;
     [SerializeField] float lowStaminaJumpForce;
     [Tooltip("The maximum number of jumps the player can do mid-air")][SerializeField] int maxJumps;
@@ -28,35 +26,29 @@ public class PlayerMovement : MonoBehaviour
     [Header("Stamina")]
     [SerializeField]
     [Range(0f, 1f)] private float sprintStaminaDrainRate;
-    [SerializeField][Range(0f, 1f)] private float moveStaminaDrainRate;
-    [SerializeField][Range(0f, 1f)] private float staminaRegenRate;
-    [SerializeField][Range(0f, 1f)] private float jumpStaminaLoss;
-    [SerializeField][Range(0f, 1f)] private float staminaCorrectionTolerance;
+    [SerializeField][Range(0.0f, 1.0f)] private float moveStaminaDrainRate;
+    [SerializeField][Range(0.0f, 1.0f)] private float staminaRegenRate;
+    [SerializeField][Range(0.0f, 1.0f)] private float jumpStaminaLoss;
 
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
     private float sprintInput;
+    private List<GameObject> touchingGameObjects = new();
     #endregion
-
-    public void Awake()
-    {
-        rigidBody = Player.PlayerObject.rigidBody;
-        playerGameObject = Player.PlayerObject.gameObject;
-    }
 
     public void Update()
     {
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
         Player.PlayerObject.playerSpeed = walkSpeed;
 
-        if (Physics.Raycast(gameObject.transform.position, Vector3.down, raycastDistance))
-            Player.PlayerObject.jumpCounter = 0;
-
         if (!(movementInput == Vector2.zero))
         {
-            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > staminaCorrectionTolerance)
+            float staminaDrain = moveStaminaDrainRate;
+
+            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > 0.0f)
             {
-                Player.PlayerObject.Sprint(sprintStaminaDrainRate, sprintSpeed);
+                staminaDrain += Time.deltaTime * sprintStaminaDrainRate;
+                Player.PlayerObject.playerSpeed = sprintSpeed;
                 currentFov = defaultFov + sprintFov;
             }
             else
@@ -64,22 +56,40 @@ public class PlayerMovement : MonoBehaviour
                 currentFov = defaultFov;
             }
 
-            if (Player.PlayerObject.stamina < staminaCorrectionTolerance)
+            if (Player.PlayerObject.stamina <= 0.0f)
                 Player.PlayerObject.playerSpeed = lowStaminaSpeed;
 
-            Player.PlayerObject.MovePlayer(moveStaminaDrainRate, movementInput);
+            Player.PlayerObject.Move(staminaDrain, movementInput);
         }
-        
+
         if (movementInputRaw == Vector2.zero)
         {
-            if (Player.PlayerObject.stamina < 1f)
-                Player.PlayerObject.stamina += Time.deltaTime * staminaRegenRate;
+            if (Player.PlayerObject.stamina < 1.0f)
+                Player.PlayerObject.RegenStamina(Time.deltaTime * staminaRegenRate);
             currentFov = defaultFov;
+            Player.PlayerObject.isPlayerMoving = false;
         }
+        else
+            Player.PlayerObject.isPlayerMoving = true;
+
 
         Player.PlayerObject.mainCamera.fieldOfView = Mathf.Lerp(Player.PlayerObject.mainCamera.fieldOfView, currentFov, fovSpeed);
     }
 
+    #region Collision Detection
+    public void OnCollisionEnter(Collision collision)
+    {
+        touchingGameObjects.Add(collision.gameObject);
+        Player.PlayerObject.isPlayerOnGround = GroundCheck();
+    }
+    public void OnCollisionExit(Collision collision)
+    {
+        touchingGameObjects.Remove(collision.gameObject);
+        Player.PlayerObject.isPlayerOnGround = GroundCheck();
+    }
+    #endregion
+
+    #region Input System
     public void OnMove(InputAction.CallbackContext value)
     {
         movementInputRaw = value.ReadValue<Vector2>();
@@ -90,16 +100,37 @@ public class PlayerMovement : MonoBehaviour
     }
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (Player.PlayerObject.jumpCounter < maxJumps && value.performed)
+        if (Player.PlayerObject.jumpCounter < maxJumps && value.started)
         {
-            if (Player.PlayerObject.stamina > jumpStaminaLoss + staminaCorrectionTolerance)
+            Player.PlayerObject.isPlayerJumping = true;
+            if (Player.PlayerObject.stamina > jumpStaminaLoss)
             {
                 Player.PlayerObject.Jump(jumpForce, jumpStaminaLoss);
             }
             else
             {
-                Player.PlayerObject.Jump(lowStaminaJumpForce, 0);
+                Player.PlayerObject.Jump(lowStaminaJumpForce, 0.0f);
+            }
+            Player.PlayerObject.jumpCounter++;
+        }
+        else
+            Player.PlayerObject.isPlayerJumping = false;
+    }
+    #endregion
+
+    public bool GroundCheck()
+    {
+        foreach (GameObject currentObject in touchingGameObjects)
+        {
+            foreach (string tag in groundTags)
+            {
+                if (currentObject.CompareTag(tag))
+                {
+                    Player.PlayerObject.jumpCounter = 0;
+                    return true;
+                }
             }
         }
+        return false;
     }
 }
