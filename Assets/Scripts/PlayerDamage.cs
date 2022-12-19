@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Player))]
 public class PlayerDamage : MonoBehaviour
 {
     #region Variable Initials

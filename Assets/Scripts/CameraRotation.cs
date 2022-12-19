@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Player))]
 public class CameraRotation : MonoBehaviour
 {
     #region Variable Initials
