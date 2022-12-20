@@ -3407,9 +3407,9 @@ MonoBehaviour:
     stamina: 1
     playerSpeed: 5
     jumpCounter: 0
-    rigidBody: {fileID: 0}
-    gameObject: {fileID: 0}
-    mainCamera: {fileID: 0}
+    rigidBody: {fileID: 2023235365}
+    gameObject: {fileID: 2023235362}
+    mainCamera: {fileID: 612575578}
 --- !u!136 &2023235369
 CapsuleCollider:
   m_ObjectHideFlags: 0
