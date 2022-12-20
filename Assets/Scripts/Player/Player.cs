@@ -6,12 +6,16 @@ public class Player : MonoBehaviour
 {
     public static PlayerClass PlayerObject = new();
     [SerializeField][Tooltip("These values are read-only and can be used to debug")] private PlayerClass DebugPlayer = PlayerObject;
+
+    public void Awake() => PlayerObject.tag = gameObject.tag;
 }
 
 [System.Serializable]
 public class PlayerClass
 {
     #region Variable Initials
+    public string name;
+    public string tag;
     public float stamina = 1f;
     public float playerSpeed;
     public int jumpCounter;

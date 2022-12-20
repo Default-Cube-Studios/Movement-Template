@@ -9,14 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Health
-  m_EditorClassIdentifier: Assembly-CSharp::PowerUpStats
-  powerUpObject: {fileID: 0}
-  name: 
-  tags: []
-  description: 
+  m_Script: {fileID: 11500000, guid: 443c1a55e3cdc8b4496ed7b0bb58457d, type: 3}
+  m_Name: Stamina v1
+  m_EditorClassIdentifier: 
+  level: 1
+  description: Lorem ipsum
+  tags:
+  - Pickup
+  - Stats
   isTimed: 0
   duration: 0
-  health: 0.5
   stamina: 0.2

@@ -7,10 +7,10 @@ public class PlayerMovement : MonoBehaviour
 {
     #region Variable Initials
     [Header("Movement")]
-    [SerializeField] float walkSpeed;
-    [Tooltip("The player speed while low on stamina")][SerializeField] float lowStaminaSpeed;
-    [Tooltip("The player speed while sprinting")][SerializeField] float sprintSpeed;
-    [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")][SerializeField] float inputSmoothing;
+    public float walkSpeed;
+    [Tooltip("The player speed while low on stamina")] public float lowStaminaSpeed;
+    [Tooltip("The player speed while sprinting")] public float sprintSpeed;
+    [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")] public float inputSmoothing;
 
     [Header("Field of View")]
     [Tooltip("The speed of the transition between FOVs")][SerializeField][Range(0f, 1f)] float fovSpeed;
@@ -20,9 +20,10 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     [Tooltip("A set of tags attatched to platforms and ground objects")][SerializeField] string[] groundTags;
-    [SerializeField] float jumpForce;
-    [SerializeField] float lowStaminaJumpForce;
-    [Tooltip("The maximum number of jumps the player can do mid-air")][SerializeField] int maxJumps;
+    public float jumpForce;
+    public float lowStaminaJumpForce;
+    [HideInInspector] public bool infiniteJump;
+    [Tooltip("The maximum number of jumps the player can do mid-air")] public int maxJumps;
 
     [Header("Stamina")]
     [SerializeField]
@@ -34,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
     private float sprintInput;
-    private List<GameObject> touchingGameObjects = new();
+    private HashSet<GameObject> touchingGameObjects = new();
     #endregion
 
     public void Update()
@@ -83,11 +84,7 @@ public class PlayerMovement : MonoBehaviour
         touchingGameObjects.Add(collision.gameObject);
         Player.PlayerObject.isPlayerOnGround = GroundCheck();
     }
-    public void OnCollisionExit(Collision collision)
-    {
-        touchingGameObjects.Remove(collision.gameObject);
-        Player.PlayerObject.isPlayerOnGround = GroundCheck();
-    }
+    public void OnCollisionExit(Collision collision) => touchingGameObjects.Remove(collision.gameObject);
     #endregion
 
     #region Input System
@@ -101,7 +98,7 @@ public class PlayerMovement : MonoBehaviour
     }
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (Player.PlayerObject.jumpCounter < maxJumps && value.started)
+        if ((Player.PlayerObject.jumpCounter < maxJumps || infiniteJump) && value.started)
         {
             Player.PlayerObject.isPlayerJumping = true;
             if (Player.PlayerObject.stamina > jumpStaminaLoss)
