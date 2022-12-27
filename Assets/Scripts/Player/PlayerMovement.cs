@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Player))]
+[DisallowMultipleComponent]
 public class PlayerMovement : MonoBehaviour
 {
     #region Variable Initials
@@ -22,7 +24,7 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("A set of tags attatched to platforms and ground objects")][SerializeField] string[] groundTags;
     public float jumpForce;
     public float lowStaminaJumpForce;
-    [HideInInspector] public bool infiniteJump;
+    public bool infiniteJump;
     [Tooltip("The maximum number of jumps the player can do mid-air")] public int maxJumps;
 
     [Header("Stamina")]
@@ -32,91 +34,109 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][Range(0.0f, 1.0f)] private float staminaRegenRate;
     [SerializeField][Range(0.0f, 1.0f)] private float jumpStaminaLoss;
 
+    [Header("Camera")]
+    [Tooltip("The speed at which mouse movement is smoothed (Larger numbers decrease smoothness)")][SerializeField] float mouseSmoothing;
+
     private Vector2 movementInput = Vector2.zero;
     private Vector2 movementInputRaw = Vector2.zero;
+    private float rotationX, rotationY;
+    private Vector2 cameraInput = Vector2.zero;
+    private Vector2 cameraInputRaw = Vector2.zero;
     private float sprintInput;
     private HashSet<GameObject> touchingGameObjects = new();
     #endregion
 
-    public void Update()
+    #region Unity Events
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+    void Update()
     {
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * inputSmoothing);
-        Player.PlayerObject.playerSpeed = walkSpeed;
+        Players.ActivePlayer.playerSpeed = walkSpeed;
 
         if (!(movementInput == Vector2.zero))
         {
             float staminaDrain = moveStaminaDrainRate;
 
-            if (!(sprintInput == 0.0f) && Player.PlayerObject.stamina > 0.0f)
+            if (!(sprintInput == 0.0f) && Players.ActivePlayer.stamina > 0.0f)
             {
                 staminaDrain += Time.deltaTime * sprintStaminaDrainRate;
-                Player.PlayerObject.playerSpeed = sprintSpeed;
+                Players.ActivePlayer.playerSpeed = sprintSpeed;
                 currentFov = defaultFov + sprintFov;
             }
             else
-            {
                 currentFov = defaultFov;
-            }
 
-            if (Player.PlayerObject.stamina <= 0.0f)
-                Player.PlayerObject.playerSpeed = lowStaminaSpeed;
+            if (Players.ActivePlayer.stamina <= 0.0f)
+                Players.ActivePlayer.playerSpeed = lowStaminaSpeed;
+            else
+                Players.ActivePlayer.DrainStamina(Time.deltaTime * staminaDrain);
 
-            Player.PlayerObject.Move(staminaDrain, movementInput);
+            Players.ActivePlayer.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * Players.ActivePlayer.playerSpeed, 0, movementInput.y * Time.deltaTime * Players.ActivePlayer.playerSpeed)));
         }
 
         if (movementInputRaw == Vector2.zero)
         {
-            if (Player.PlayerObject.stamina < 1.0f)
-                Player.PlayerObject.RegenStamina(Time.deltaTime * staminaRegenRate);
+            if (!Players.ActivePlayer.isPlayerMoving && !Players.ActivePlayer.isPlayerJumping && Players.ActivePlayer.isPlayerOnGround && Players.ActivePlayer.stamina < 1.0f)
+                Players.ActivePlayer.RegenStamina(Time.deltaTime * staminaRegenRate);
             currentFov = defaultFov;
-            Player.PlayerObject.isPlayerMoving = false;
+            Players.ActivePlayer.isPlayerMoving = false;
         }
         else
-            Player.PlayerObject.isPlayerMoving = true;
+            Players.ActivePlayer.isPlayerMoving = true;
 
 
-        Player.PlayerObject.mainCamera.fieldOfView = Mathf.Lerp(Player.PlayerObject.mainCamera.fieldOfView, currentFov, fovSpeed);
+        Players.ActivePlayer.mainCamera.fieldOfView = Mathf.Lerp(Players.ActivePlayer.mainCamera.fieldOfView, currentFov, fovSpeed);
+
+
+        cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * mouseSmoothing);
+
+        rotationX -= cameraInput.y * Time.deltaTime;
+        rotationX = Mathf.Clamp(rotationX, -90.0f, 90.0f);
+        rotationY += cameraInput.x * Time.deltaTime;
+
+        Players.ActivePlayer.mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0.0f, 0.0f);
+        Players.ActivePlayer.rigidBody.MoveRotation(Quaternion.Euler(0.0f, rotationY, 0.0f));
     }
+    #endregion
 
     #region Collision Detection
     public void OnCollisionEnter(Collision collision)
     {
         touchingGameObjects.Add(collision.gameObject);
-        Player.PlayerObject.isPlayerOnGround = GroundCheck();
+        Players.ActivePlayer.isPlayerOnGround = GroundCheck();
     }
-    public void OnCollisionExit(Collision collision) => touchingGameObjects.Remove(collision.gameObject);
+    public void OnCollisionExit(Collision collision)
+    {
+        touchingGameObjects.Remove(collision.gameObject);
+        Players.ActivePlayer.isPlayerOnGround = GroundCheck();
+    }
     #endregion
 
     #region Input System
-    public void OnMove(InputAction.CallbackContext value)
-    {
-        movementInputRaw = value.ReadValue<Vector2>();
-    }
-    public void OnSprint(InputAction.CallbackContext value)
-    {
-        sprintInput = value.ReadValue<float>();
-    }
+    public void OnMove(InputAction.CallbackContext value) => movementInputRaw = value.ReadValue<Vector2>();
+    public void OnSprint(InputAction.CallbackContext value) => sprintInput = value.ReadValue<float>();
+    public void OnLook(InputAction.CallbackContext value) => cameraInputRaw = value.ReadValue<Vector2>();
     public void OnJump(InputAction.CallbackContext value)
     {
-        if ((Player.PlayerObject.jumpCounter < maxJumps || infiniteJump) && value.started)
+        if ((Players.ActivePlayer.jumpCounter < maxJumps || infiniteJump) && value.started)
         {
-            Player.PlayerObject.isPlayerJumping = true;
-            if (Player.PlayerObject.stamina > jumpStaminaLoss)
-            {
-                Player.PlayerObject.Jump(jumpForce, jumpStaminaLoss);
-            }
+            Players.ActivePlayer.isPlayerJumping = true;
+
+            if (Players.ActivePlayer.stamina > jumpStaminaLoss)
+                Jump(jumpForce, jumpStaminaLoss);
             else
-            {
-                Player.PlayerObject.Jump(lowStaminaJumpForce, 0.0f);
-            }
-            Player.PlayerObject.jumpCounter++;
+                Jump(lowStaminaJumpForce, 0.0f);
         }
         else
-            Player.PlayerObject.isPlayerJumping = false;
+            Players.ActivePlayer.isPlayerJumping = false;
     }
     #endregion
 
-    public bool GroundCheck()
+    bool GroundCheck()
     {
         foreach (GameObject currentObject in touchingGameObjects)
         {
@@ -124,11 +144,32 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (currentObject.CompareTag(tag))
                 {
-                    Player.PlayerObject.jumpCounter = 0;
+                    Players.ActivePlayer.jumpCounter = 0;
                     return true;
                 }
             }
         }
         return false;
     }
+
+    void Jump(float jumpForce, float staminaLoss)
+    {
+        Players.ActivePlayer.rigidBody.AddForce(Vector3.up * jumpForce);
+        Players.ActivePlayer.DrainStamina(staminaLoss);
+        Players.ActivePlayer.jumpCounter++;
+    }
+
+    #region Actions
+    public void AddWalkSpeed(float speed) => walkSpeed += speed;
+    public void AddSprintSpeed(float speed) => sprintSpeed += speed;
+
+    public void SetWalkStaminaDrain(float amount) => moveStaminaDrainRate = amount;
+    public void SetSprintStaminaDrain(float amount) => sprintStaminaDrainRate = amount;
+    public void SetStaminaRegen(float amount) => staminaRegenRate = amount;
+
+    public void AddJumpForce(float force) => jumpForce += force;
+    public void SetJumpStaminaLoss(float amount) => jumpStaminaLoss = amount;
+    public void SetMaxJumps(int jumps) => maxJumps = jumps;
+    public void SetInfiniteJump(bool state) => infiniteJump = state;
+    #endregion
 }

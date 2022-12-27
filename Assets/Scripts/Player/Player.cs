@@ -1,47 +1,75 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
+[DisallowMultipleComponent]
 public class Player : MonoBehaviour
 {
-    public static PlayerClass PlayerObject = new();
-    [SerializeField][Tooltip("These values are read-only and can be used to debug")] private PlayerClass DebugPlayer = PlayerObject;
+    #region Variable Initials
+    [Tooltip("This player instance")] public static PlayerClass ThisPlayer;
+    [SerializeField][Tooltip("Inspector-only values to debug the player")] private PlayerClass DebugPlayer;
+    public bool selectedOnAwake;
+    private bool hasBeenSetup = false;
+    #endregion
 
-    public void Awake() => PlayerObject.tag = gameObject.tag;
+    void Awake() => SetupPlayer();
+
+    void SetupPlayer()
+    {
+        if (hasBeenSetup || !PlayerManager.Instance.hasLoaded)
+            return;
+
+        ThisPlayer = new(gameObject);
+        PlayerManager.Instance.InitializePlayer(ThisPlayer);
+
+        if (selectedOnAwake)
+            PlayerManager.Instance.SelectPlayer(ThisPlayer.playerManagerIndex);
+
+        DebugPlayer = ThisPlayer;
+        hasBeenSetup = true;
+    }
+    public void Destroy() => Destroy(ThisPlayer.gameObject);
+    public void Destroy(float delay) => Destroy(ThisPlayer.gameObject, delay);
+
+    void OnEnable() => PlayerManager.HasLoaded += SetupPlayer;
+    void OnDisable() => PlayerManager.HasLoaded -= SetupPlayer;
+
+    #region Actions
+    public void Heal(float amount) => ThisPlayer.Heal(amount);
+    public void Damage(float amount) => ThisPlayer.Damage(amount);
+    public void DrainStamina(float amount) => ThisPlayer.DrainStamina(amount);
+    public void RegenStamina(float amount) => ThisPlayer.RegenStamina(amount);
+    public void SetState(bool state) => ThisPlayer.isPlayerAlive = state;
+    public void Kill() => ThisPlayer.Kill();
+    public void Respawn() => ThisPlayer.Respawn();
+    #endregion
 }
 
-[System.Serializable]
+[Serializable]
 public class PlayerClass
 {
     #region Variable Initials
-    public string name;
-    public string tag;
-    public float stamina = 1f;
+    [Tooltip("The index of this player in the Player Manager")] public int playerManagerIndex;
+    [Header("Stats")]
+    public float stamina = 1.0f;
+    public float health = 1.0f;
+    [Header("Movement")]
     public float playerSpeed;
     public int jumpCounter;
-    public float health = 1f;
+    [Header("Functions")]
     public bool isPlayerAlive = true;
     public bool isPlayerOnGround = true;
     public bool isPlayerMoving = false;
     public bool isPlayerJumping = false;
+    [Header("Components")]
     public GameObject gameObject;
     public Transform transform;
     public Rigidbody rigidBody;
     public Camera mainCamera;
-    #endregion
-
-    #region Movement
-    public void Move(float staminaDrain, Vector2 movementInput)
-    {
-        if (stamina > 0.0f)
-            DrainStamina(Time.deltaTime * staminaDrain);
-        rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * playerSpeed, 0, movementInput.y * Time.deltaTime * playerSpeed)));
-    }
-    public void Jump(float jumpForce, float staminaLoss)
-    {
-        rigidBody.AddForce(Vector3.up * jumpForce);
-        DrainStamina(staminaLoss);
-    }
+    [Tooltip("The event called when the player's stamina changes")] public static event Action<float> OnStamina;
+    [Tooltip("The event called when the player's health changes")] public static event Action<float> OnHealth;
+    [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStatus;
     #endregion
 
     #region Stamina
@@ -51,6 +79,8 @@ public class PlayerClass
             stamina -= staminaLoss;
         else
             stamina = 0.0f;
+
+        OnStamina?.Invoke(stamina);
     }
     public void RegenStamina(float staminaGain)
     {
@@ -58,6 +88,8 @@ public class PlayerClass
             stamina += staminaGain;
         else
             stamina = 1.0f;
+
+        OnStamina?.Invoke(stamina);
     }
     #endregion
 
@@ -68,13 +100,17 @@ public class PlayerClass
             health -= damageAmount;
         else
             Kill();
+
+        OnHealth?.Invoke(health);
     }
-    public void Repair(float gainAmount)
+    public void Heal(float gainAmount)
     {
         if (health + gainAmount < 1.0f)
             health += gainAmount;
         else
             health = 1.0f;
+
+        OnHealth?.Invoke(health);
     }
     public void Kill()
     {
@@ -82,16 +118,45 @@ public class PlayerClass
 
         health = 0.0f;
         stamina = 0.0f;
-        isPlayerAlive = false;
 
         gameObject.GetComponent<PlayerMovement>().enabled = false;
-        gameObject.GetComponent<CameraRotation>().enabled = false;
         gameObject.GetComponent<PlayerDamage>().enabled = false;
         gameObject.GetComponent<PlayerInput>().enabled = false;
-        rigidBody.MoveRotation(Quaternion.Euler(1, 1, 1));
+        transform.localRotation = Quaternion.Euler(1.0f, transform.localRotation.y, 0.0f);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        OnStatus?.Invoke(false);
+        OnHealth?.Invoke(health);
+        OnStamina?.Invoke(stamina);
+    }
+    public void Respawn()
+    {
+        Players.ActivePlayer.rigidBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        Players.ActivePlayer.health = 1.0f;
+        Players.ActivePlayer.stamina = 1.0f;
+
+        Players.ActivePlayer.gameObject.GetComponent<PlayerMovement>().enabled = true;
+        Players.ActivePlayer.gameObject.GetComponent<PlayerDamage>().enabled = true;
+        Players.ActivePlayer.gameObject.GetComponent<PlayerInput>().enabled = true;
+        Players.ActivePlayer.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        OnStatus?.Invoke(true);
+        OnHealth?.Invoke(health);
+        OnStamina?.Invoke(stamina);
     }
     #endregion
+
+    public PlayerClass(GameObject playerGameObject)
+    {
+        gameObject = playerGameObject;
+        transform = playerGameObject.transform;
+        rigidBody = playerGameObject.GetComponent<Rigidbody>();
+        mainCamera = playerGameObject.GetComponentInChildren<Camera>();
+    }
 }

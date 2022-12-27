@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Player))]
+[DisallowMultipleComponent]
 public class PlayerDamage : MonoBehaviour
 {
     #region Variable Initials
@@ -12,17 +13,20 @@ public class PlayerDamage : MonoBehaviour
     [SerializeField] float forceExponent;
     #endregion
 
-    public void LateUpdate()
+    void LateUpdate()
     {
-        if (!Player.PlayerObject.isPlayerMoving && !Player.PlayerObject.isPlayerJumping && Player.PlayerObject.isPlayerOnGround && Player.PlayerObject.health < 1.0f)
-        {
-            Player.PlayerObject.Repair(Time.deltaTime * damageRegenRate);
-        }
+        if (!Players.ActivePlayer.isPlayerMoving && !Players.ActivePlayer.isPlayerJumping && Players.ActivePlayer.isPlayerOnGround && Players.ActivePlayer.health < 1.0f)
+            Players.ActivePlayer.Heal(Time.deltaTime * damageRegenRate);
     }
 
-    public void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision)
     {
         if (collision.relativeVelocity.y > minFallForce)
-            Player.PlayerObject.Damage(Mathf.Pow(collision.relativeVelocity.y, forceExponent) / Mathf.Pow(maxFallForce, forceExponent));
+            Players.ActivePlayer.Damage(Mathf.Pow(collision.relativeVelocity.y, forceExponent) / Mathf.Pow(maxFallForce, forceExponent));
     }
+
+    #region Actions
+    public void SetMinFallForce(float force) => minFallForce = force;
+    public void SetMaxFallForce(float force) => maxFallForce = force;
+    #endregion
 }
