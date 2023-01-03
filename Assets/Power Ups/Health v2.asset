@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0e6ce5666f1fc647974212838ec815f, type: 3}
   m_Name: Health v2
   m_EditorClassIdentifier: 
+  _color: {r: 0.013220549, g: 1, b: 0, a: 0}
+  _colorIntensity: 3
   OnCollect:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3393766566940283112, guid: 33c7237b345283841a89f6f65e212761, type: 3}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+      - m_Target: {fileID: 986028191381816541, guid: 33c7237b345283841a89f6f65e212761, type: 3}
+        m_TargetAssemblyTypeName: Actions, Assembly-CSharp
         m_MethodName: Heal
         m_Mode: 4
         m_Arguments:
@@ -27,8 +29,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 3393766566940283112, guid: 33c7237b345283841a89f6f65e212761, type: 3}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+      - m_Target: {fileID: 986028191381816541, guid: 33c7237b345283841a89f6f65e212761, type: 3}
+        m_TargetAssemblyTypeName: Actions, Assembly-CSharp
         m_MethodName: RegenStamina
         m_Mode: 4
         m_Arguments:
