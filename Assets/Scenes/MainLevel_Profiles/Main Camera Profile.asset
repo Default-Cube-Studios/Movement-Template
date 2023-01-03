@@ -143,9 +143,9 @@ MonoBehaviour:
     value: 1
   shutterAngle:
     overrideState: 1
-    value: 270
+    value: 360
   sampleCount:
-    overrideState: 0
+    overrideState: 1
     value: 10
 --- !u!114 &-1341543010666233874
 MonoBehaviour:
@@ -234,10 +234,10 @@ MonoBehaviour:
     value: 1
   filtering:
     overrideState: 1
-    value: {x: 47.280174, y: 73.323654}
+    value: {x: 21.424166, y: 50.915108}
   minLuminance:
     overrideState: 1
-    value: -2
+    value: -1
   maxLuminance:
     overrideState: 1
     value: 1

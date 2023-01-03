@@ -12,10 +12,10 @@ GameObject:
   - component: {fileID: 3393766566940283116}
   - component: {fileID: 3393766566940283104}
   - component: {fileID: 3393766566940283112}
-  - component: {fileID: 3393766566940283113}
   - component: {fileID: 3393766566940283106}
+  - component: {fileID: 986028191381816541}
   - component: {fileID: 3393766566940283105}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -35,6 +35,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3393766568205081511}
+  - {fileID: 756165039516089272}
   - {fileID: 3393766567946331801}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -81,37 +82,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc407355dbc992f4bb46f92931a4e60b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DebugPlayer:
+  ThisPlayer:
     playerManagerIndex: 0
-    stamina: 1
-    health: 1
+    stamina: 0
+    health: 0
     playerSpeed: 0
     jumpCounter: 0
     isPlayerAlive: 1
     isPlayerOnGround: 1
     isPlayerMoving: 0
     isPlayerJumping: 0
+    canPlayerJump: 0
     gameObject: {fileID: 0}
     transform: {fileID: 0}
     rigidBody: {fileID: 0}
     mainCamera: {fileID: 0}
-  selectedOnAwake: 1
---- !u!114 &3393766566940283113
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3393766566940283111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 744eb0b7d197b3e46a3f92e48eb49f44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damageRegenRate: 0.05
-  minFallForce: 6
-  maxFallForce: 8.75
-  forceExponent: 10
+    MovementScript: {fileID: 0}
+    CollisionScript: {fileID: 0}
+    destroyed: 0
+  _selectedOnAwake: 1
 --- !u!114 &3393766566940283106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,25 +113,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afca2c248d4502c46a5d8550405bc321, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 3
-  lowStaminaSpeed: 1
-  sprintSpeed: 12
-  inputSmoothing: 5
-  fovSpeed: 0.3
-  defaultFov: 85
-  sprintFov: 20
-  currentFov: 0
-  groundTags:
-  - Platforms
-  jumpForce: 300
-  lowStaminaJumpForce: 100
-  infiniteJump: 0
-  maxJumps: 3
-  sprintStaminaDrainRate: 0.1
-  moveStaminaDrainRate: 0.05
-  staminaRegenRate: 0.2
-  jumpStaminaLoss: 0.1
-  mouseSmoothing: 7.5
+  _lowStaminaSpeed: 1
+  _walkSpeed: 5
+  _sprintSpeed: 12
+  _inputSmoothing: 5
+  _fovSpeed: 0.3
+  _defaultFov: 90
+  _sprintFov: 30
+  _currentFov: 0
+  _infiniteJump: 0
+  _jumpForce: 300
+  _lowStaminaJumpForce: 100
+  _maxJumps: 3
+  _moveStaminaDrainRate: 0.03
+  _sprintStaminaDrainRate: 0.05
+  _jumpStaminaLoss: 0.1
+  _staminaRegenRate: 0.1
+  _mouseSmoothing: 7.5
+  _damageRegenRate: 0.03
+  _minFallForce: 6
+  _maxFallForce: 8.75
+  _forceExponent: 10
+--- !u!114 &986028191381816541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3393766566940283111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4fe04dd936bdd44691232ac815f3341, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &3393766566940283105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,7 +160,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actions: {fileID: -944628639613478452, guid: 3374e700ad5b1dc4d802e1b7021a98cc, type: 3}
   m_NotificationBehavior: 2
-  m_UIInputModule: {fileID: 3598278351009558615, guid: ea960add0acaeae45afa3498a0f05776, type: 3}
+  m_UIInputModule: {fileID: 3279297005776771847, guid: 6db366cab4c87074eb9288d83905b23a, type: 3}
   m_DeviceLostEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -451,7 +454,7 @@ GameObject:
   - component: {fileID: 3393766568205081511}
   - component: {fileID: 3393766568205081505}
   - component: {fileID: 3393766568205081510}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -523,3 +526,64 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4465089665985133162
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 756165039516089272}
+  - component: {fileID: 805967948916873052}
+  - component: {fileID: 9202667689645884792}
+  m_Layer: 3
+  m_Name: Collision Detector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &756165039516089272
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4465089665985133162}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.85, z: 0}
+  m_LocalScale: {x: 3, y: 0.4, z: 3}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3393766566940283118}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &805967948916873052
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4465089665985133162}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &9202667689645884792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4465089665985133162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 744eb0b7d197b3e46a3f92e48eb49f44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _groundTags:
+  - Platforms
