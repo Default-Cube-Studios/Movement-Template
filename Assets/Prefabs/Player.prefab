@@ -11,9 +11,8 @@ GameObject:
   - component: {fileID: 3393766566940283118}
   - component: {fileID: 3393766566940283116}
   - component: {fileID: 3393766566940283104}
-  - component: {fileID: 3393766566940283112}
-  - component: {fileID: 3393766566940283113}
-  - component: {fileID: 3393766566940283106}
+  - component: {fileID: 5880632260407087245}
+  - component: {fileID: 5556844397806068666}
   - component: {fileID: 3393766566940283105}
   m_Layer: 0
   m_Name: Player
@@ -47,17 +46,8 @@ CapsuleCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3393766566940283111}
   m_Material: {fileID: 13400000, guid: 7ca2d38d0d7c58847a61ea97b4944110, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
   m_IsTrigger: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
   m_Radius: 0.5
   m_Height: 2
   m_Direction: 1
@@ -69,27 +59,16 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3393766566940283111}
-  serializedVersion: 4
+  serializedVersion: 2
   m_Mass: 1
   m_Drag: 1
   m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 1
---- !u!114 &3393766566940283112
+--- !u!114 &5880632260407087245
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,25 +77,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 3393766566940283111}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc407355dbc992f4bb46f92931a4e60b, type: 3}
+  m_Script: {fileID: 11500000, guid: 18d19e9fbd32f2246bbb19d32e00b8e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DebugPlayer:
+  ThisPlayer:
     playerManagerIndex: 0
-    stamina: 1
-    health: 1
+    stamina: 0
+    health: 0
     playerSpeed: 0
     jumpCounter: 0
-    isPlayerAlive: 1
-    isPlayerOnGround: 1
-    isPlayerMoving: 0
-    isPlayerJumping: 0
+    isAlive: 0
+    isGrounded: 0
+    isIdle: 0
+    isJumping: 0
+    canJump: 0
     gameObject: {fileID: 0}
     transform: {fileID: 0}
     rigidBody: {fileID: 0}
     mainCamera: {fileID: 0}
-  selectedOnAwake: 1
---- !u!114 &3393766566940283113
+    MovementScript: {fileID: 0}
+    CollisionScript: {fileID: 0}
+    destroyed: 0
+    activePowerUps: []
+  _selectedOnAwake: 1
+--- !u!114 &5556844397806068666
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -125,44 +109,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 3393766566940283111}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 744eb0b7d197b3e46a3f92e48eb49f44, type: 3}
+  m_Script: {fileID: 11500000, guid: 35c8940261bab32428d4c62fa8729e07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageRegenRate: 0.05
-  minFallForce: 6
-  maxFallForce: 8.75
-  forceExponent: 10
---- !u!114 &3393766566940283106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3393766566940283111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afca2c248d4502c46a5d8550405bc321, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  walkSpeed: 3
-  lowStaminaSpeed: 1
-  sprintSpeed: 12
-  inputSmoothing: 5
-  fovSpeed: 0.3
-  defaultFov: 85
-  sprintFov: 20
-  currentFov: 0
-  groundTags:
-  - Platforms
-  jumpForce: 300
-  lowStaminaJumpForce: 100
-  infiniteJump: 0
-  maxJumps: 3
-  sprintStaminaDrainRate: 0.1
-  moveStaminaDrainRate: 0.05
-  staminaRegenRate: 0.2
-  jumpStaminaLoss: 0.1
-  mouseSmoothing: 7.5
+  _lowStaminaSpeed: 0
+  _walkSpeed: 0
+  _sprintSpeed: 0
+  _inputSmoothing: 0
+  _fovSpeed: 0
+  _defaultFov: 0
+  _sprintFov: 0
+  _currentFov: 0
+  _infiniteJump: 0
+  _jumpForce: 0
+  _lowStaminaJumpForce: 0
+  _maxJumps: 0
+  _moveStaminaDrainRate: 0
+  _sprintStaminaDrainRate: 0
+  _jumpStaminaLoss: 0
+  _staminaRegenRate: 0
+  _mouseSmoothing: 0
+  _damageRegenRate: 0
+  _minFallForce: 0
+  _maxFallForce: 0
+  _forceExponent: 0
 --- !u!114 &3393766566940283105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -190,7 +160,7 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3393766566940283106}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
         m_MethodName: OnMove
         m_Mode: 0
@@ -206,7 +176,7 @@ MonoBehaviour:
     m_ActionName: Player/Move[/Keyboard/w,/Keyboard/upArrow,/Keyboard/s,/Keyboard/downArrow,/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3393766566940283106}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
         m_MethodName: OnLook
         m_Mode: 0
@@ -222,7 +192,7 @@ MonoBehaviour:
     m_ActionName: Player/Look[/Mouse/delta,/Pen/delta]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3393766566940283106}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
         m_MethodName: OnSprint
         m_Mode: 0
@@ -238,7 +208,7 @@ MonoBehaviour:
     m_ActionName: Player/Sprint[/Keyboard/shift]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3393766566940283106}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
         m_MethodName: OnJump
         m_Mode: 0
@@ -346,17 +316,9 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
-  m_Iso: 200
-  m_ShutterSpeed: 0.005
-  m_Aperture: 16
-  m_FocusDistance: 10
-  m_FocalLength: 50
-  m_BladeCount: 5
-  m_Curvature: {x: 2, y: 11}
-  m_BarrelClipping: 0.25
-  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0

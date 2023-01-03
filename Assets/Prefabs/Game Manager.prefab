@@ -61,7 +61,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
   m_MoveRepeatDelay: 0.5
   m_MoveRepeatRate: 0.1
   m_XRTrackingOrigin: {fileID: 0}
@@ -91,20 +90,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0eb2743abea76b4a99b9055722ab310, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DebugPlayers:
-    DebugActivePlayer:
-      playerManagerIndex: 0
-      stamina: 0
-      health: 0
-      playerSpeed: 0
-      jumpCounter: 0
-      isPlayerAlive: 0
-      isPlayerOnGround: 0
-      isPlayerMoving: 0
-      isPlayerJumping: 0
-      gameObject: {fileID: 0}
-      transform: {fileID: 0}
-      rigidBody: {fileID: 0}
-      mainCamera: {fileID: 0}
-    InitializedPlayers: []
-    hasLoaded: 0
+  _playerPrefab: {fileID: 3393766566940283111, guid: 33c7237b345283841a89f6f65e212761, type: 3}
+  ActivePlayer:
+    playerManagerIndex: 0
+    stamina: 0
+    health: 0
+    playerSpeed: 0
+    jumpCounter: 0
+    isAlive: 0
+    isGrounded: 0
+    isIdle: 0
+    isJumping: 0
+    canJump: 0
+    gameObject: {fileID: 0}
+    transform: {fileID: 0}
+    rigidBody: {fileID: 0}
+    mainCamera: {fileID: 0}
+    MovementScript: {fileID: 0}
+    CollisionScript: {fileID: 0}
+    destroyed: 0
+    activePowerUps: []
+  InitializedPlayer: []
