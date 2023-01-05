@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
@@ -55,4 +56,19 @@ public class PowerUp : MonoBehaviour
         PowerUpType = powerUp;
         SetColor(PowerUpType._color, PowerUpType._colorIntensity);
     }
+}
+
+// TEMP CODE BELOW
+public class Player
+{
+    public static PlayerClass ActivePlayer = new();
+    public static List<PlayerClass> InitializedPlayer = new();
+    public static Player ap = new();
+    public static List<Player> ip = new();
+}
+
+public class PlayerClass
+{
+    public List<PowerUpType> activePowerUps = new();
+    public GameObject gameObject;
 }

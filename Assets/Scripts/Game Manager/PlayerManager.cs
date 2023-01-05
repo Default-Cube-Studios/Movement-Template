@@ -9,8 +9,8 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private GameObject _playerPrefab;
     public static GameObject playerGameObject;
     [Header("Player")]
-    [SerializeField] private Player ActivePlayer = Player.ActivePlayer;
-    [SerializeField] private List<Player> InitializedPlayer = Player.InitializedPlayer;
+    [SerializeField] private Player ActivePlayer = Player.ap;
+    [SerializeField] private List<Player> InitializedPlayer = Player.ip;
 
     public static bool setUp = false;
     public static event Action SetUp;
@@ -23,5 +23,5 @@ public class PlayerManager : MonoBehaviour
         SetUp?.Invoke();
     }
 
-    public static Player CreatePlayer(Vector3 position) => Instantiate(playerGameObject, position, Quaternion.identity).GetComponent<PlayerInstance>().ThisPlayer;
+    //public static Player CreatePlayer(Vector3 position) => Instantiate(playerGameObject, position, Quaternion.identity).GetComponent<PlayerInstance>().ThisPlayer;
 }
