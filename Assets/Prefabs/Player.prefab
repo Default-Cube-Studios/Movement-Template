@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 3393766566940283104}
   - component: {fileID: 3393766566940283105}
   - component: {fileID: 3975200662067917206}
-  - component: {fileID: 5760413240044596295}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -235,59 +234,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d5c391bc27c2b64394b463ed22f0412, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ThisPlayer:
-    playerManagerIndex: 0
-    stamina: 0
-    health: 0
-    playerSpeed: 0
-    jumpCounter: 0
-    isAlive: 1
-    isGrounded: 1
-    isIdle: 1
-    isJumping: 0
-    canJump: 1
-    gameObject: {fileID: 0}
-    transform: {fileID: 0}
-    rigidBody: {fileID: 0}
-    mainCamera: {fileID: 0}
-    MovementScript: {fileID: 0}
-    CollisionScript: {fileID: 0}
-    destroyed: 0
-    activePowerUps: []
   _selectedOnAwake: 1
---- !u!114 &5760413240044596295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3393766566940283111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fdbfc9abd782dfc4c825cd348658ae15, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _lowStaminaSpeed: 1
-  _walkSpeed: 5
-  _sprintSpeed: 12
-  _inputSmoothing: 5
-  _fovSpeed: 0.5
-  _defaultFov: 90
-  _sprintFov: 120
-  _currentFov: 0
-  _infiniteJump: 0
-  _jumpForce: 300
-  _lowStaminaJumpForce: 100
-  _maxJumps: 3
-  _moveStaminaDrainRate: 0.03
-  _sprintStaminaDrainRate: 0.05
-  _jumpStaminaLoss: 0.1
-  _staminaRegenRate: 0.1
-  _mouseSmoothing: 7.5
-  _damageRegenRate: 0.03
-  _minFallForce: 6
-  _maxFallForce: 9
-  _forceExponent: 10
 --- !u!1 &3393766567946331804
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,7 +420,6 @@ GameObject:
   m_Component:
   - component: {fileID: 756165039516089272}
   - component: {fileID: 805967948916873052}
-  - component: {fileID: 8141012332864732698}
   m_Layer: 3
   m_Name: Collision Detector
   m_TagString: Untagged
@@ -518,17 +464,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &8141012332864732698
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4465089665985133162}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70887ee9af5a5d645a550c302ce0d7bf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _groundTags:
-  - Ground

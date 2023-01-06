@@ -59,16 +59,16 @@ public class PowerUp : MonoBehaviour
 }
 
 // TEMP CODE BELOW
-public class Player
-{
-    public static PlayerClass ActivePlayer = new();
-    public static List<PlayerClass> InitializedPlayer = new();
-    public static Player ap = new();
-    public static List<Player> ip = new();
-}
+//public class Player
+//{
+//    public static PlayerClass ActivePlayer = new();
+//    public static List<PlayerClass> InitializedPlayers = new();
+//    public static Player ap = new();
+//    public static List<Player> ip = new();
+//}
 
-public class PlayerClass
-{
-    public List<PowerUpType> activePowerUps = new();
-    public GameObject gameObject;
-}
+//public class PlayerClass
+//{
+//    public List<PowerUpType> activePowerUps = new();
+//    public GameObject gameObject;
+//}
