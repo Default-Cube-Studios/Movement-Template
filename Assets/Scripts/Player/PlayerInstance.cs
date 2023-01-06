@@ -36,8 +36,8 @@ public class PlayerInstance : MonoBehaviour
     {
         PlayerManager.SetUp -= SetupPlayer;
 
-        if (!ThisPlayer.destroyed && setUp)
-            Player.DestroyPlayer(ThisPlayer);
+        //if (!ThisPlayer.destroyed && setUp)
+        //    Player.DestroyPlayer(ThisPlayer);
     }
 }
 
