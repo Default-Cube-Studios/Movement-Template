@@ -36,8 +36,8 @@ public class PlayerInstance : MonoBehaviour
     {
         PlayerManager.SetUp -= SetupPlayer;
 
-        //if (!ThisPlayer.destroyed && setUp)
-        //    Player.DestroyPlayer(ThisPlayer);
+        if (!ThisPlayer.destroyed && setUp)
+            Player.DestroyPlayer(ThisPlayer);
     }
 }
 
@@ -204,7 +204,6 @@ public class Player
         foreach (MonoBehaviour script in InitializedPlayers.ElementAt(index).gameObject.GetComponents<MonoBehaviour>())
             script.enabled = true;
 
-        Debug.Log(ActivePlayer.health);
         PlayerSelected?.Invoke(InitializedPlayers.ElementAt(index));
     }
     public static void DestroyPlayer(Player player)
