@@ -36,9 +36,17 @@ public class PlayerInstance : MonoBehaviour
     {
         PlayerManager.SetUp -= SetupPlayer;
 
+        // WARNING! The code below causes a memory leak
+
         //if (!ThisPlayer.destroyed && setUp)
         //    Player.DestroyPlayer(ThisPlayer);
     }
+
+    //private void OnDestroy()
+    //{
+    //    if (!ThisPlayer.destroyed)
+    //        Player.DestroyPlayer(ThisPlayer);
+    //}
 }
 
 [Serializable]
@@ -64,8 +72,7 @@ public class Player
     public Rigidbody rigidBody;
     public Camera mainCamera;
     [Header("Scripts")]
-    public Movement MovementScript;
-    public Collisions CollisionScript;
+    public List<MonoBehaviour> Scripts = new();
     [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStatus;
     [HideInInspector] public bool destroyed;
     [Header("Items")]
@@ -161,6 +168,9 @@ public class Player
 
     public static void SelectPlayer(Player player)
     {
+        if (InitializedPlayer.Count <= 0)
+            PlayerManager.CreatePlayer(new Vector3(0, 1, 0));
+
         foreach (Player thisPlayer in InitializedPlayer)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
@@ -184,6 +194,9 @@ public class Player
     }
     public static void SelectPlayer(int index)
     {
+        if (InitializedPlayer.Count <= 0)
+            PlayerManager.CreatePlayer(new Vector3(0, 1, 0));
+
         foreach (Player thisPlayer in InitializedPlayer)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
@@ -204,9 +217,6 @@ public class Player
     }
     public static void DestroyPlayer(Player player)
     {
-        if (InitializedPlayer.Count - 1 <= 0)
-            PlayerManager.CreatePlayer(Vector3.zero);
-
         player.gameObject.GetComponent<PlayerInstance>().Destroy();
         InitializedPlayer.Remove(player);
         SelectPlayer(InitializedPlayer.Count - 1);
@@ -215,9 +225,6 @@ public class Player
     }
     public static void DestroyPlayer(int index)
     {
-        if (InitializedPlayer.Count - 1 <= 0)
-            PlayerManager.CreatePlayer(Vector3.zero);
-
         InitializedPlayer.ElementAt(index).gameObject.GetComponent<PlayerInstance>().Destroy();
         InitializedPlayer.RemoveAt(index);
         SelectPlayer(InitializedPlayer.Count - 1);
@@ -232,7 +239,7 @@ public class Player
         transform = playerGameObject.transform;
         rigidBody = playerGameObject.GetComponent<Rigidbody>();
         mainCamera = playerGameObject.GetComponentInChildren<Camera>();
-        MovementScript = playerGameObject.GetComponent<Movement>();
-        CollisionScript = playerGameObject.GetComponentInChildren<Collisions>();
+        Scripts.Append(playerGameObject.GetComponent<Movement>());
+        Scripts.Append(playerGameObject.GetComponentInChildren<Collisions>());
     }
 }

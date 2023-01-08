@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
@@ -23,8 +24,8 @@ public class PowerUp : MonoBehaviour
 
         if (isTimed)
         {
-            StartCoroutine(RevertPowerUp());
             Player.ActivePlayer.activePowerUps.Add(PowerUpType);
+            StartCoroutine(RevertPowerUp());
         }
         else
             Destroy(gameObject);
@@ -41,10 +42,14 @@ public class PowerUp : MonoBehaviour
     }
     IEnumerator RevertPowerUp()
     {
+        Messages.Clear();
+        SetMessage();
         gameObject.GetComponent<MeshRenderer>().enabled = false;
         gameObject.GetComponent<SphereCollider>().enabled = false;
         yield return new WaitForSeconds(duration);
+        Messages.Clear();
         Player.ActivePlayer.activePowerUps.Remove(PowerUpType);
+        SetMessage();
         PowerUpType.OnRevert.Invoke();
         Destroy(gameObject);
     }
@@ -54,5 +59,11 @@ public class PowerUp : MonoBehaviour
     {
         PowerUpType = powerUp;
         SetColor(PowerUpType._color, PowerUpType._colorIntensity);
+    }
+
+    public void SetMessage()
+    {
+        foreach (PowerUpType powerUp in Player.ActivePlayer.activePowerUps)
+            Messages.AddText(powerUp.name + " is active\n");
     }
 }

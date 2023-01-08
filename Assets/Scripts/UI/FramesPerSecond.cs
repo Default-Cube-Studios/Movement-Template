@@ -1,12 +1,8 @@
 using UnityEngine;
 using TMPro;
 
+[RequireComponent(typeof(TextMeshProUGUI))]
 public class FramesPerSecond : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI fpsText;
-
-    public void LateUpdate()
-    {
-        fpsText.text = (Mathf.Round(1 / Time.unscaledDeltaTime)).ToString();
-    }
+    public void LateUpdate() => gameObject.GetComponent<TextMeshProUGUI>().text = (Mathf.Round(1 / Time.unscaledDeltaTime)).ToString();
 }
