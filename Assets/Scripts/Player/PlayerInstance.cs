@@ -23,6 +23,10 @@ public class PlayerInstance : MonoBehaviour
             return;
 
         ThisPlayer = new(gameObject);
+
+        foreach (MonoBehaviour script in GetComponents<MonoBehaviour>())
+            ThisPlayer.Scripts.Add(script);
+
         Player.InitializePlayer(ThisPlayer);
         if (_selectedOnAwake)
             Player.SelectPlayer(ThisPlayer.playerManagerIndex);
@@ -58,7 +62,7 @@ public class Player
     public float stamina = 1.0f;
     public float health = 1.0f;
     [Header("Movement")]
-    public float playerSpeed;
+    public float speed;
     public int jumpCounter;
     [Header("Functions")]
     public bool isAlive = true;
@@ -168,14 +172,14 @@ public class Player
 
     public static void SelectPlayer(Player player)
     {
-        if (InitializedPlayer.Count <= 0)
-            PlayerManager.CreatePlayer(new Vector3(0, 1, 0));
+        if (!InitializedPlayer.Contains(player)) return;
 
         foreach (Player thisPlayer in InitializedPlayer)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
                 script.enabled = false;
 
+            thisPlayer.rigidBody.isKinematic = true;
             thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
         }
 
@@ -190,17 +194,19 @@ public class Player
         foreach (MonoBehaviour script in player.gameObject.GetComponents<MonoBehaviour>())
             script.enabled = true;
 
+        player.rigidBody.isKinematic = false;
         PlayerSelected?.Invoke();
     }
     public static void SelectPlayer(int index)
     {
-        if (InitializedPlayer.Count <= 0)
-            PlayerManager.CreatePlayer(new Vector3(0, 1, 0));
+        if (InitializedPlayer.Count <= index) return;
 
         foreach (Player thisPlayer in InitializedPlayer)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
                 script.enabled = false;
+
+            thisPlayer.rigidBody.isKinematic = true;
 
             thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
         }
@@ -213,10 +219,13 @@ public class Player
         foreach (MonoBehaviour script in InitializedPlayer.ElementAt(index).gameObject.GetComponents<MonoBehaviour>())
             script.enabled = true;
 
+        InitializedPlayer.ElementAt(index).rigidBody.isKinematic = false;
         PlayerSelected?.Invoke();
     }
     public static void DestroyPlayer(Player player)
     {
+        if (!InitializedPlayer.Contains(player)) return;
+
         player.gameObject.GetComponent<PlayerInstance>().Destroy();
         InitializedPlayer.Remove(player);
         SelectPlayer(InitializedPlayer.Count - 1);
@@ -225,6 +234,8 @@ public class Player
     }
     public static void DestroyPlayer(int index)
     {
+        if (InitializedPlayer.Count <= index) return;
+
         InitializedPlayer.ElementAt(index).gameObject.GetComponent<PlayerInstance>().Destroy();
         InitializedPlayer.RemoveAt(index);
         SelectPlayer(InitializedPlayer.Count - 1);
@@ -239,7 +250,5 @@ public class Player
         transform = playerGameObject.transform;
         rigidBody = playerGameObject.GetComponent<Rigidbody>();
         mainCamera = playerGameObject.GetComponentInChildren<Camera>();
-        Scripts.Append(playerGameObject.GetComponent<Movement>());
-        Scripts.Append(playerGameObject.GetComponentInChildren<Collisions>());
     }
 }

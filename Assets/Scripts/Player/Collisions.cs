@@ -5,16 +5,18 @@ using UnityEngine;
 public class Collisions : MonoBehaviour
 {
     #region Variable Initials
+    public Player Player { get; private set; }
     [Tooltip("A set of tags attatched to platforms and ground objects")][SerializeField] private string[] _groundTags;
     private HashSet<GameObject> _touchingGameObjects = new();
     #endregion
 
     #region Unity Events
+    void Awake() => Player = GetComponentInParent<PlayerInstance>().ThisPlayer;
     private void OnTriggerStay(Collider other) => _touchingGameObjects.Add(other.gameObject);
     private void OnTriggerExit(Collider other)
     {
-        if (!Player.ActivePlayer.isJumping && !GroundCheck())
-            Player.ActivePlayer.canJump = false;
+        if (!Player.isJumping && !GroundCheck())
+            Player.canJump = false;
     }
     private void LateUpdate()
     {
@@ -31,14 +33,14 @@ public class Collisions : MonoBehaviour
             {
                 if (gameObject.CompareTag(tag))
                 {
-                    Player.ActivePlayer.jumpCounter = 0;
-                    Player.ActivePlayer.isGrounded = true;
-                    Player.ActivePlayer.canJump = true;
+                    Player.jumpCounter = 0;
+                    Player.isGrounded = true;
+                    Player.canJump = true;
                     return true;
                 }
             }
         }
-        Player.ActivePlayer.isGrounded = false;
+        Player.isGrounded = false;
         return false;
     }
 }

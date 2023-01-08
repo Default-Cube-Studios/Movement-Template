@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 public class Movement : MonoBehaviour
 {
     #region Variable Initials
+    public Player Player { get; private set; }
     [Header("Movement")]
     [Tooltip("The player speed while low on stamina")] public float _lowStaminaSpeed;
     public float _walkSpeed;
@@ -47,6 +48,7 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Unity Events
+    void Awake() => Player = GetComponent<PlayerInstance>().ThisPlayer;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -59,43 +61,43 @@ public class Movement : MonoBehaviour
         rotationX -= cameraInput.y * Time.deltaTime;
         rotationX = Mathf.Clamp(rotationX, -90.0f, 90.0f);
         rotationY += cameraInput.x * Time.deltaTime;
-        Player.ActivePlayer.mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0.0f, 0.0f);
-        Player.ActivePlayer.rigidBody.MoveRotation(Quaternion.Euler(0.0f, rotationY, 0.0f));
+        Player.mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0.0f, 0.0f);
+        Player.rigidBody.MoveRotation(Quaternion.Euler(0.0f, rotationY, 0.0f));
 
         if (!(movementInput == Vector2.zero))
-            Player.ActivePlayer.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * Player.ActivePlayer.playerSpeed, 0, movementInput.y * Time.deltaTime * Player.ActivePlayer.playerSpeed)));
+            Player.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * Player.speed, 0, movementInput.y * Time.deltaTime * Player.speed)));
 
         if (movementInputRaw == Vector2.zero)
         {
-            Player.ActivePlayer.isIdle = true;
+            Player.isIdle = true;
             _currentFov = _defaultFov;
 
-            if (!Player.ActivePlayer.isJumping && Player.ActivePlayer.isGrounded)
+            if (!Player.isJumping && Player.isGrounded)
             {
-                Player.ActivePlayer.RegenStamina(Time.deltaTime * _staminaRegenRate);
-                Player.ActivePlayer.Heal(Time.deltaTime * _damageRegenRate);
+                Player.RegenStamina(Time.deltaTime * _staminaRegenRate);
+                Player.Heal(Time.deltaTime * _damageRegenRate);
             }
         }
         else
         {
-            Player.ActivePlayer.isIdle = false;
-            Player.ActivePlayer.playerSpeed = _walkSpeed;
+            Player.isIdle = false;
+            Player.speed = _walkSpeed;
             _currentFov = _defaultFov;
 
-            if (!(sprintInput == 0.0f) && Player.ActivePlayer.stamina > 0.0f)
+            if (!(sprintInput == 0.0f) && Player.stamina > 0.0f)
                 Sprint();
-            else if (Player.ActivePlayer.stamina <= 0.0f)
-                Player.ActivePlayer.playerSpeed = _lowStaminaSpeed;
+            else if (Player.stamina <= 0.0f)
+                Player.speed = _lowStaminaSpeed;
             else
-                Player.ActivePlayer.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
+                Player.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
         }
 
-        Player.ActivePlayer.mainCamera.fieldOfView = Mathf.Lerp(Player.ActivePlayer.mainCamera.fieldOfView, _currentFov, _fovSpeed);
+        Player.mainCamera.fieldOfView = Mathf.Lerp(Player.mainCamera.fieldOfView, _currentFov, _fovSpeed);
     }
     void OnCollisionEnter(Collision collision)
     {
         if (collision.relativeVelocity.y > _minFallForce)
-            Player.ActivePlayer.Damage(Mathf.Pow(collision.relativeVelocity.y, _forceExponent) / Mathf.Pow(_maxFallForce, _forceExponent));
+            Player.Damage(Mathf.Pow(collision.relativeVelocity.y, _forceExponent) / Mathf.Pow(_maxFallForce, _forceExponent));
     }
     #endregion
 
@@ -105,14 +107,14 @@ public class Movement : MonoBehaviour
     public void OnLook(InputAction.CallbackContext value) => cameraInputRaw = value.ReadValue<Vector2>();
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (Player.ActivePlayer.jumpCounter >= _maxJumps)
-            Player.ActivePlayer.canJump = false;
+        if (Player.jumpCounter >= _maxJumps)
+            Player.canJump = false;
 
-        Player.ActivePlayer.isJumping = value.started;
+        Player.isJumping = value.started;
 
-        if ((Player.ActivePlayer.canJump || _infiniteJump) && value.started)
+        if ((Player.canJump || _infiniteJump) && value.started)
         {
-            if (Player.ActivePlayer.stamina > _jumpStaminaLoss)
+            if (Player.stamina > _jumpStaminaLoss)
                 Jump(_jumpForce, _jumpStaminaLoss);
             else
                 Jump(_lowStaminaJumpForce, 1.0f);
@@ -122,14 +124,14 @@ public class Movement : MonoBehaviour
 
     void Sprint()
     {
-        Player.ActivePlayer.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);
-        Player.ActivePlayer.playerSpeed = _sprintSpeed;
+        Player.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);
+        Player.speed = _sprintSpeed;
         _currentFov = _defaultFov + _sprintFov;
     }
     void Jump(float jumpForce, float staminaLoss)
     {
-        Player.ActivePlayer.rigidBody.AddForce(Vector3.up * jumpForce);
-        Player.ActivePlayer.DrainStamina(staminaLoss);
-        Player.ActivePlayer.jumpCounter++;
+        Player.rigidBody.AddForce(Vector3.up * jumpForce);
+        Player.DrainStamina(staminaLoss);
+        Player.jumpCounter++;
     }
 }

@@ -9,7 +9,7 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private GameObject _playerPrefab;
     public static GameObject playerGameObject;
     [Header("Player")]
-    [SerializeField] private Player ActivePlayer = Player.ActivePlayer;
+    [SerializeField] private Player ActivePlayer;
     [SerializeField] private List<Player> InitializedPlayer = Player.InitializedPlayer;
 
     public static bool setUp = false;
@@ -19,6 +19,7 @@ public class PlayerManager : MonoBehaviour
     private void Awake()
     {
         playerGameObject = _playerPrefab;
+        ActivePlayer = Player.ActivePlayer;
         setUp = true;
         SetUp?.Invoke();
     }
