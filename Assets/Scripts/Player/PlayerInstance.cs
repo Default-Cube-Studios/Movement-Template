@@ -5,21 +5,28 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
+[AddComponentMenu("Player/Player")]
 [DisallowMultipleComponent]
 public class PlayerInstance : MonoBehaviour
 {
     #region Variable Initials
     [Tooltip("This player instance")] public Player ThisPlayer;
     public bool _selectedOnAwake;
-
     private bool setUp;
+
+    public GameObject _playerPrefab;
+    public static GameObject playerGameObject;
     #endregion
 
-    void Awake() => SetupPlayer();
+    void Awake()
+    {
+        playerGameObject = _playerPrefab;
+        SetupPlayer();
+    }
 
     void SetupPlayer()
     {
-        if (PlayerManager.setUp && setUp)
+        if (setUp)
             return;
 
         ThisPlayer = new(gameObject);
@@ -32,14 +39,14 @@ public class PlayerInstance : MonoBehaviour
             Player.SelectPlayer(ThisPlayer.playerManagerIndex);
         setUp = true;
     }
+
     public void Destroy() => Destroy(ThisPlayer.gameObject);
     public void Destroy(float delay) => Destroy(ThisPlayer.gameObject, delay);
 
-    private void OnEnable() => PlayerManager.SetUp += SetupPlayer;
+    public static Player CreatePlayer(Vector3 position) => Instantiate(playerGameObject, position, Quaternion.identity).GetComponent<PlayerInstance>().ThisPlayer;
+
     private void OnDisable()
     {
-        PlayerManager.SetUp -= SetupPlayer;
-
         // WARNING! The code below causes a memory leak
 
         //if (!ThisPlayer.destroyed && setUp)
@@ -75,7 +82,7 @@ public class Player
     public Transform transform;
     public Rigidbody rigidBody;
     public Camera mainCamera;
-    [Header("Scripts")]
+    [Space]
     public List<MonoBehaviour> Scripts = new();
     [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStatus;
     [HideInInspector] public bool destroyed;
@@ -155,9 +162,9 @@ public class Player
     [Tooltip("The currently active player")] public static Player ActivePlayer;
     [Tooltip("A list of all selectable players")] public static List<Player> InitializedPlayer = new();
 
-    public static event Action PlayerInitialized;
-    public static event Action PlayerSelected;
-    public static event Action PlayerDestroyed;
+    public static event Action<Player> PlayerInitialized;
+    public static event Action<Player> PlayerSelected;
+    public static event Action<Player> PlayerDestroyed;
 
     public static int InitializePlayer(Player player)
     {
@@ -166,7 +173,7 @@ public class Player
 
         InitializedPlayer.Add(player);
         player.playerManagerIndex = InitializedPlayer.Count - 1;
-        PlayerInitialized?.Invoke();
+        PlayerInitialized?.Invoke(player);
         return InitializedPlayer.Count - 1;
     }
 
@@ -195,7 +202,7 @@ public class Player
             script.enabled = true;
 
         player.rigidBody.isKinematic = false;
-        PlayerSelected?.Invoke();
+        PlayerSelected?.Invoke(player);
     }
     public static void SelectPlayer(int index)
     {
@@ -220,7 +227,7 @@ public class Player
             script.enabled = true;
 
         InitializedPlayer.ElementAt(index).rigidBody.isKinematic = false;
-        PlayerSelected?.Invoke();
+        PlayerSelected?.Invoke(InitializedPlayer.ElementAt(index));
     }
     public static void DestroyPlayer(Player player)
     {
@@ -230,7 +237,7 @@ public class Player
         InitializedPlayer.Remove(player);
         SelectPlayer(InitializedPlayer.Count - 1);
         player.destroyed = true;
-        PlayerDestroyed?.Invoke();
+        PlayerDestroyed?.Invoke(player);
     }
     public static void DestroyPlayer(int index)
     {
@@ -240,7 +247,7 @@ public class Player
         InitializedPlayer.RemoveAt(index);
         SelectPlayer(InitializedPlayer.Count - 1);
         InitializedPlayer.ElementAt(index).destroyed = true;
-        PlayerDestroyed?.Invoke();
+        PlayerDestroyed?.Invoke(InitializedPlayer.ElementAt(index));
     }
     #endregion
 

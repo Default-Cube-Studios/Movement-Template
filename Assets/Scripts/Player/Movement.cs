@@ -3,15 +3,17 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInstance))]
+[AddComponentMenu("Player/Movement")]
 [DisallowMultipleComponent]
 public class Movement : MonoBehaviour
 {
     #region Variable Initials
-    public Player Player { get; private set; }
+    private Player ThisPlayer;
     [Header("Movement")]
     [Tooltip("The player speed while low on stamina")] public float _lowStaminaSpeed;
     public float _walkSpeed;
     [Tooltip("The player speed while sprinting")] public float _sprintSpeed;
+    [SerializeField] private float _accelerationRate;
     [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")] public float _inputSmoothing;
 
     [Header("Field of View")]
@@ -48,7 +50,6 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Unity Events
-    void Awake() => Player = GetComponent<PlayerInstance>().ThisPlayer;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -56,49 +57,46 @@ public class Movement : MonoBehaviour
     }
     void Update()
     {
+        Look();
         movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * _inputSmoothing);
-        cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * _mouseSmoothing);
-        rotationX -= cameraInput.y * Time.deltaTime;
-        rotationX = Mathf.Clamp(rotationX, -90.0f, 90.0f);
-        rotationY += cameraInput.x * Time.deltaTime;
-        Player.mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0.0f, 0.0f);
-        Player.rigidBody.MoveRotation(Quaternion.Euler(0.0f, rotationY, 0.0f));
 
-        if (!(movementInput == Vector2.zero))
-            Player.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * Player.speed, 0, movementInput.y * Time.deltaTime * Player.speed)));
+        if (movementInput != Vector2.zero)
+            Move();
 
         if (movementInputRaw == Vector2.zero)
         {
-            Player.isIdle = true;
+            ThisPlayer.isIdle = true;
             _currentFov = _defaultFov;
 
-            if (!Player.isJumping && Player.isGrounded)
+            if (!ThisPlayer.isJumping && ThisPlayer.isGrounded)
             {
-                Player.RegenStamina(Time.deltaTime * _staminaRegenRate);
-                Player.Heal(Time.deltaTime * _damageRegenRate);
+                ThisPlayer.RegenStamina(Time.deltaTime * _staminaRegenRate);
+                ThisPlayer.Heal(Time.deltaTime * _damageRegenRate);
             }
         }
         else
         {
-            Player.isIdle = false;
-            Player.speed = _walkSpeed;
+            ThisPlayer.isIdle = false;
+            ThisPlayer.speed = _walkSpeed;
             _currentFov = _defaultFov;
 
-            if (!(sprintInput == 0.0f) && Player.stamina > 0.0f)
+            if (!(sprintInput == 0.0f) && ThisPlayer.stamina > 0.0f)
                 Sprint();
-            else if (Player.stamina <= 0.0f)
-                Player.speed = _lowStaminaSpeed;
+            else if (ThisPlayer.stamina <= 0.0f)
+                ThisPlayer.speed = _lowStaminaSpeed;
             else
-                Player.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
+                ThisPlayer.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
         }
 
-        Player.mainCamera.fieldOfView = Mathf.Lerp(Player.mainCamera.fieldOfView, _currentFov, _fovSpeed);
+        ThisPlayer.mainCamera.fieldOfView = Mathf.Lerp(ThisPlayer.mainCamera.fieldOfView, _currentFov, _fovSpeed);
     }
     void OnCollisionEnter(Collision collision)
     {
         if (collision.relativeVelocity.y > _minFallForce)
-            Player.Damage(Mathf.Pow(collision.relativeVelocity.y, _forceExponent) / Mathf.Pow(_maxFallForce, _forceExponent));
+            ThisPlayer.Damage(Mathf.Pow(collision.relativeVelocity.y, _forceExponent) / Mathf.Pow(_maxFallForce, _forceExponent));
     }
+    private void OnEnable() => Player.PlayerSelected += SetPlayer;
+    private void OnDisable() => Player.PlayerSelected -= SetPlayer;
     #endregion
 
     #region Input System
@@ -107,14 +105,14 @@ public class Movement : MonoBehaviour
     public void OnLook(InputAction.CallbackContext value) => cameraInputRaw = value.ReadValue<Vector2>();
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (Player.jumpCounter >= _maxJumps)
-            Player.canJump = false;
+        if (ThisPlayer.jumpCounter >= _maxJumps)
+            ThisPlayer.canJump = false;
 
-        Player.isJumping = value.started;
+        ThisPlayer.isJumping = value.started;
 
-        if ((Player.canJump || _infiniteJump) && value.started)
+        if ((ThisPlayer.canJump || _infiniteJump) && value.started)
         {
-            if (Player.stamina > _jumpStaminaLoss)
+            if (ThisPlayer.stamina > _jumpStaminaLoss)
                 Jump(_jumpForce, _jumpStaminaLoss);
             else
                 Jump(_lowStaminaJumpForce, 1.0f);
@@ -122,16 +120,39 @@ public class Movement : MonoBehaviour
     }
     #endregion
 
+    #region Movement
+    void Look()
+    {
+        cameraInput = Vector2.Lerp(cameraInput, cameraInputRaw, Time.deltaTime * _mouseSmoothing);
+        rotationX -= cameraInput.y * Time.deltaTime;
+        rotationX = Mathf.Clamp(rotationX, -90.0f, 90.0f);
+        rotationY += cameraInput.x * Time.deltaTime;
+        ThisPlayer.mainCamera.transform.localRotation = Quaternion.Euler(rotationX, 0.0f, 0.0f);
+        ThisPlayer.rigidBody.MoveRotation(Quaternion.Euler(0.0f, rotationY, 0.0f));
+    }
+    void Move()
+    {
+        ThisPlayer.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * ThisPlayer.speed, 0, movementInput.y * Time.deltaTime * ThisPlayer.speed)));
+    }
     void Sprint()
     {
-        Player.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);
-        Player.speed = _sprintSpeed;
+        ThisPlayer.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);
+        ThisPlayer.speed = _sprintSpeed;
         _currentFov = _defaultFov + _sprintFov;
     }
     void Jump(float jumpForce, float staminaLoss)
     {
-        Player.rigidBody.AddForce(Vector3.up * jumpForce);
-        Player.DrainStamina(staminaLoss);
-        Player.jumpCounter++;
+        ThisPlayer.rigidBody.AddForce(Vector3.up * jumpForce);
+        ThisPlayer.DrainStamina(staminaLoss);
+        ThisPlayer.jumpCounter++;
+    }
+    #endregion
+
+    void SetPlayer(Player player)
+    {
+        if (player != GetComponent<PlayerInstance>().ThisPlayer)
+            return;
+
+        ThisPlayer = player;
     }
 }
