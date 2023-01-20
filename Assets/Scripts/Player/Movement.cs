@@ -13,8 +13,9 @@ public class Movement : MonoBehaviour
     [Tooltip("The player speed while low on stamina")] public float _lowStaminaSpeed;
     public float _walkSpeed;
     [Tooltip("The player speed while sprinting")] public float _sprintSpeed;
-    [SerializeField] private float _accelerationRate;
-    [Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")] public float _inputSmoothing;
+    [SerializeField][Range(1.0f, 50.0f)][Tooltip("The speed at which the player accelerates")] private float _acceleration;
+    [SerializeField][Range(0.0f, 5.0f)][Tooltip("The time it takes for the player to stop")] private float _deceleration;
+    [Range(0.0f, 1.0f)][Tooltip("The speed at which player movement is smoothed (Larger numbers decrease smoothness)")] public float _inputSmoothing;
 
     [Header("Field of View")]
     [SerializeField][Tooltip("The speed of the transition between FOVs")][Range(0f, 1f)] private float _fovSpeed;
@@ -43,10 +44,12 @@ public class Movement : MonoBehaviour
     [Tooltip("The largest amount of fall damage before the player dies")] public float _maxFallForce;
     public float _forceExponent;
 
-    private Vector2 movementInput, movementInputRaw = Vector2.zero;
+    private Vector2 movementInput = Vector2.zero;
     private Vector2 cameraInput, cameraInputRaw = Vector2.zero;
     private float rotationX, rotationY;
     private float sprintInput;
+    private Vector3 stopVelocity;
+    private Vector2 targetSpeed, targetAcceleration, speed, speedLastFrame = Vector2.zero;
     #endregion
 
     #region Unity Events
@@ -58,12 +61,8 @@ public class Movement : MonoBehaviour
     void Update()
     {
         Look();
-        movementInput = Vector2.Lerp(movementInput, movementInputRaw, Time.deltaTime * _inputSmoothing);
 
-        if (movementInput != Vector2.zero)
-            Move();
-
-        if (movementInputRaw == Vector2.zero)
+        if (movementInput == Vector2.zero)
         {
             ThisPlayer.isIdle = true;
             _currentFov = _defaultFov;
@@ -73,6 +72,8 @@ public class Movement : MonoBehaviour
                 ThisPlayer.RegenStamina(Time.deltaTime * _staminaRegenRate);
                 ThisPlayer.Heal(Time.deltaTime * _damageRegenRate);
             }
+
+            Stop();
         }
         else
         {
@@ -86,6 +87,8 @@ public class Movement : MonoBehaviour
                 ThisPlayer.speed = _lowStaminaSpeed;
             else
                 ThisPlayer.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
+
+            Move();
         }
 
         ThisPlayer.mainCamera.fieldOfView = Mathf.Lerp(ThisPlayer.mainCamera.fieldOfView, _currentFov, _fovSpeed);
@@ -100,7 +103,7 @@ public class Movement : MonoBehaviour
     #endregion
 
     #region Input System
-    public void OnMove(InputAction.CallbackContext value) => movementInputRaw = value.ReadValue<Vector2>();
+    public void OnMove(InputAction.CallbackContext value) => movementInput = value.ReadValue<Vector2>();
     public void OnSprint(InputAction.CallbackContext value) => sprintInput = value.ReadValue<float>();
     public void OnLook(InputAction.CallbackContext value) => cameraInputRaw = value.ReadValue<Vector2>();
     public void OnJump(InputAction.CallbackContext value)
@@ -132,8 +135,53 @@ public class Movement : MonoBehaviour
     }
     void Move()
     {
-        ThisPlayer.rigidBody.MovePosition(transform.position + transform.TransformDirection(new Vector3(movementInput.x * Time.deltaTime * ThisPlayer.speed, 0, movementInput.y * Time.deltaTime * ThisPlayer.speed)));
+        speedLastFrame = speed;
+        Vector3 localVelocity = transform.InverseTransformDirection(ThisPlayer.rigidBody.velocity);
+        targetSpeed = new(ThisPlayer.speed * movementInput.x, ThisPlayer.speed * movementInput.y);
+        targetAcceleration = new(_acceleration * movementInput.x, _acceleration * movementInput.y);
+        speed = Vector2.zero;
+
+        //if (localVelocity.x > ThisPlayer.speed)
+        //    speed.x -= localVelocity.x - ThisPlayer.speed;
+        //else if (localVelocity.x < -ThisPlayer.speed)
+        //    speed.x += localVelocity.x + ThisPlayer.speed;
+        //else
+        //    speed.x = _acceleration;
+
+        //if (localVelocity.z > ThisPlayer.speed)
+        //    speed.y -= localVelocity.z - ThisPlayer.speed;
+        //else if (localVelocity.z < -ThisPlayer.speed)
+        //    speed.y += localVelocity.z + ThisPlayer.speed;
+        //else
+        //    speed.y = _acceleration;
+
+        //targetAcceleration.x = movementInput.x < 0.0f ? -targetAcceleration.x : targetAcceleration.x;
+        //targetAcceleration.y = movementInput.y < 0.0f ? -targetAcceleration.y : targetAcceleration.y;
+
+        if (Mathf.Abs(localVelocity.z + (targetAcceleration.y * Time.deltaTime)) >= targetSpeed.y)
+            speed.y = (targetSpeed.y - localVelocity.z) / Time.deltaTime;
+        else
+            speed.y = targetAcceleration.y;
+
+        if (Mathf.Abs(localVelocity.x + (targetAcceleration.x * Time.deltaTime)) >= targetSpeed.x)
+            speed.x = (targetSpeed.x - localVelocity.x) / Time.deltaTime;
+        else
+            speed.x = targetAcceleration.x;
+
+        speed = Vector2.Lerp(speedLastFrame, speed, _inputSmoothing);
+
+        Debug.Log(localVelocity);
+
+        ThisPlayer.rigidBody.velocity += transform.TransformDirection(new Vector3(
+            speed.x * Time.deltaTime,
+            0.0f,
+            speed.y * Time.deltaTime));
     }
+
+    void Stop() => ThisPlayer.rigidBody.velocity = Vector3.SmoothDamp(
+                        ThisPlayer.rigidBody.velocity,
+                        new Vector3(0.0f, ThisPlayer.rigidBody.velocity.y, 0.0f),
+                        ref stopVelocity, _deceleration);
     void Sprint()
     {
         ThisPlayer.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);

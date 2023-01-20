@@ -132,7 +132,7 @@ public class Player
         gameObject.GetComponent<Movement>().enabled = false;
         gameObject.GetComponentInChildren<Collisions>().enabled = false;
         gameObject.GetComponent<PlayerInput>().enabled = false;
-        transform.localRotation = Quaternion.Euler(1.0f, transform.localRotation.y, 0.0f);
+        transform.Rotate(transform.eulerAngles + new Vector3(1.0f, 1.0f, 1.0f));
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -141,15 +141,15 @@ public class Player
     }
     public void Respawn()
     {
-        Player.ActivePlayer.rigidBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        rigidBody.constraints = RigidbodyConstraints.FreezeRotation;
 
-        Player.ActivePlayer.health = 1.0f;
-        Player.ActivePlayer.stamina = 1.0f;
+        health = 1.0f;
+        stamina = 1.0f;
 
-        Player.ActivePlayer.gameObject.GetComponent<Movement>().enabled = true;
-        Player.ActivePlayer.gameObject.GetComponentInChildren<Collisions>().enabled = true;
-        Player.ActivePlayer.gameObject.GetComponent<PlayerInput>().enabled = true;
-        Player.ActivePlayer.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
+        gameObject.GetComponent<Movement>().enabled = true;
+        gameObject.GetComponentInChildren<Collisions>().enabled = true;
+        gameObject.GetComponent<PlayerInput>().enabled = true;
+        transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -254,7 +254,7 @@ public class Player
     public Player(GameObject playerGameObject)
     {
         gameObject = playerGameObject;
-        transform = playerGameObject.transform;
+        transform = playerGameObject.GetComponent<Transform>();
         rigidBody = playerGameObject.GetComponent<Rigidbody>();
         mainCamera = playerGameObject.GetComponentInChildren<Camera>();
     }

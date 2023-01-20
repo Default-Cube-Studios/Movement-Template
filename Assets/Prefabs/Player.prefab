@@ -63,12 +63,12 @@ Rigidbody:
   m_GameObject: {fileID: 3393766566940283111}
   serializedVersion: 2
   m_Mass: 1
-  m_Drag: 1
+  m_Drag: 0.3
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 80
+  m_Interpolate: 1
+  m_Constraints: 112
   m_CollisionDetection: 1
 --- !u!114 &3393766566940283112
 MonoBehaviour:
@@ -86,21 +86,22 @@ MonoBehaviour:
     playerManagerIndex: 0
     stamina: 0
     health: 0
-    playerSpeed: 0
+    speed: 0
     jumpCounter: 0
-    isPlayerAlive: 1
-    isPlayerOnGround: 1
-    isPlayerMoving: 0
-    isPlayerJumping: 0
-    canPlayerJump: 0
+    isAlive: 0
+    isGrounded: 0
+    isIdle: 0
+    isJumping: 0
+    canJump: 0
     gameObject: {fileID: 0}
     transform: {fileID: 0}
     rigidBody: {fileID: 0}
     mainCamera: {fileID: 0}
-    MovementScript: {fileID: 0}
-    CollisionScript: {fileID: 0}
+    Scripts: []
     destroyed: 0
+    activePowerUps: []
   _selectedOnAwake: 1
+  _playerPrefab: {fileID: 3393766566940283111}
 --- !u!114 &3393766566940283106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,7 +117,9 @@ MonoBehaviour:
   _lowStaminaSpeed: 1
   _walkSpeed: 5
   _sprintSpeed: 12
-  _inputSmoothing: 5
+  _acceleration: 20
+  _deceleration: 0.5
+  _inputSmoothing: 0.5
   _fovSpeed: 0.3
   _defaultFov: 90
   _sprintFov: 30
