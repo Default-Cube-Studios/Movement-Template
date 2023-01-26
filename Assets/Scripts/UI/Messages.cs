@@ -4,9 +4,11 @@ using TMPro;
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class Messages : MonoBehaviour
 {
+    #region Variable Initials
     private static GameObject messageBox;
     public static TextMeshProUGUI textBox;
-    public static string text;
+    public static string text; 
+    #endregion
 
     private void Awake()
     {
@@ -15,19 +17,13 @@ public class Messages : MonoBehaviour
         Clear();
     }
 
+    #region Functions
     public static void SetText(string text)
     {
         Messages.text = text;
         textBox.text = Messages.text;
     }
-    public static void AddText(string text)
-    {
-        Messages.text += text;
-        textBox.text = Messages.text;
-    }
-    public static void Clear()
-    {
-        text = string.Empty;
-        textBox.text = text;
-    }
+    public static void AddText(string text) => SetText(Messages.text + text);
+    public static void Clear() => SetText("");
+    #endregion
 }

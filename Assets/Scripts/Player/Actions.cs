@@ -4,13 +4,13 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class Actions : MonoBehaviour
 {
-    public void Heal(float amount) => Player.ActivePlayer.Heal(amount);
-    public void Damage(float amount) => Player.ActivePlayer.Damage(amount);
-    public void DrainStamina(float amount) => Player.ActivePlayer.DrainStamina(amount);
-    public void RegenStamina(float amount) => Player.ActivePlayer.RegenStamina(amount);
-    public void SetState(bool state) => Player.ActivePlayer.isAlive = state;
-    public void Kill() => Player.ActivePlayer.Kill();
-    public void Respawn() => Player.ActivePlayer.Respawn();
+    //public void Heal(float amount) => Player.ActivePlayer.Heal(amount);
+    //public void Damage(float amount) => Player.ActivePlayer.Damage(amount);
+    //public void DrainStamina(float amount) => Player.ActivePlayer.DrainStamina(amount);
+    //public void RegenStamina(float amount) => Player.ActivePlayer.RegenStamina(amount);
+    //public void SetState(bool state) => Player.ActivePlayer.isAlive = state;
+    //public void Kill() => Player.ActivePlayer.Kill();
+    //public void Respawn() => Player.ActivePlayer.Respawn();
 
     //public void AddWalkSpeed(float speed) => Player.ActivePlayer.MovementScript._walkSpeed += speed;
     //public void AddSprintSpeed(float speed) => Player.ActivePlayer.MovementScript._sprintSpeed += speed;

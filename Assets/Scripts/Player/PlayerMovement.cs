@@ -3,12 +3,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerInstance))]
+[RequireComponent(typeof(PlayerStats))]
 [AddComponentMenu("Player/Movement")]
 [DisallowMultipleComponent]
-public class Movement : MonoBehaviour
+public class PlayerMovement : PlayerScript
 {
     #region Variable Initials
-    private Player ThisPlayer;
+    [Header("Dependacies")]
+    [SerializeField] PlayerStats stats;
     [Header("Movement")]
     [Tooltip("The player speed while low on stamina")] public float _lowStaminaSpeed;
     public float _walkSpeed;
@@ -21,7 +23,6 @@ public class Movement : MonoBehaviour
     [SerializeField][Tooltip("The speed of the transition between FOVs")][Range(0f, 1f)] private float _fovSpeed;
     [SerializeField] private float _defaultFov;
     [SerializeField][Tooltip("The FOV added onto the defaultFov attribute while sprinting")] private float _sprintFov;
-    [SerializeField] private float _currentFov;
 
     [Header("Jump")]
     public bool _infiniteJump;
@@ -33,73 +34,50 @@ public class Movement : MonoBehaviour
     [Range(0.0f, 1.0f)] public float _moveStaminaDrainRate;
     [Range(0.0f, 1.0f)] public float _sprintStaminaDrainRate;
     [Range(0.0f, 1.0f)] public float _jumpStaminaLoss;
-    [Range(0.0f, 1.0f)] public float _staminaRegenRate;
 
     [Header("Camera")]
     [SerializeField][Tooltip("The speed at which mouse movement is smoothed (Larger numbers decrease smoothness)")] private float _mouseSmoothing;
 
-    [Header("Damage")]
-    [Range(0.0f, 1.0f)] public float _damageRegenRate;
-    [Tooltip("The minimum fall force before the player takes damage")] public float _minFallForce;
-    [Tooltip("The largest amount of fall damage before the player dies")] public float _maxFallForce;
-    public float _forceExponent;
-
     private Vector2 movementInput = Vector2.zero;
     private Vector2 cameraInput, cameraInputRaw = Vector2.zero;
+    private float currentFov;
     private float rotationX, rotationY;
     private float sprintInput;
     private Vector3 stopVelocity;
     private Vector2 targetSpeed, targetAcceleration, speed, speedLastFrame = Vector2.zero;
+    private float setSpeed;
+    [HideInInspector] public int jumpCounter;
     #endregion
 
     #region Unity Events
-    void Start()
+    public override void Start()
     {
+        base.Start();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        stats = ThisPlayer.GetScript<PlayerStats>();
     }
     void Update()
     {
         Look();
+        ThisPlayer.isIdle = movementInput == Vector2.zero ? true : false;
+        currentFov = _defaultFov;
 
-        if (movementInput == Vector2.zero)
-        {
-            ThisPlayer.isIdle = true;
-            _currentFov = _defaultFov;
-
-            if (!ThisPlayer.isJumping && ThisPlayer.isGrounded)
-            {
-                ThisPlayer.RegenStamina(Time.deltaTime * _staminaRegenRate);
-                ThisPlayer.Heal(Time.deltaTime * _damageRegenRate);
-            }
-
-            Stop();
-        }
+        if (ThisPlayer.isIdle) Stop();
         else
         {
-            ThisPlayer.isIdle = false;
-            ThisPlayer.speed = _walkSpeed;
-            _currentFov = _defaultFov;
+            setSpeed = _walkSpeed;
 
-            if (!(sprintInput == 0.0f) && ThisPlayer.stamina > 0.0f)
-                Sprint();
-            else if (ThisPlayer.stamina <= 0.0f)
-                ThisPlayer.speed = _lowStaminaSpeed;
-            else
-                ThisPlayer.DrainStamina(Time.deltaTime * _moveStaminaDrainRate);
-
+            if (!(sprintInput == 0.0f) && ThisPlayer.stamina > 0.0f) Sprint();
+            else if (ThisPlayer.stamina <= 0.0f) setSpeed = _lowStaminaSpeed;
+            
+            stats.Tire(Time.deltaTime * _moveStaminaDrainRate);
             Move();
         }
 
-        ThisPlayer.mainCamera.fieldOfView = Mathf.Lerp(ThisPlayer.mainCamera.fieldOfView, _currentFov, _fovSpeed);
+        ThisPlayer.mainCamera.fieldOfView = 
+            Mathf.Lerp(ThisPlayer.mainCamera.fieldOfView, currentFov, _fovSpeed);
     }
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.relativeVelocity.y > _minFallForce)
-            ThisPlayer.Damage(Mathf.Pow(collision.relativeVelocity.y, _forceExponent) / Mathf.Pow(_maxFallForce, _forceExponent));
-    }
-    private void OnEnable() => Player.PlayerSelected += SetPlayer;
-    private void OnDisable() => Player.PlayerSelected -= SetPlayer;
     #endregion
 
     #region Input System
@@ -108,7 +86,7 @@ public class Movement : MonoBehaviour
     public void OnLook(InputAction.CallbackContext value) => cameraInputRaw = value.ReadValue<Vector2>();
     public void OnJump(InputAction.CallbackContext value)
     {
-        if (ThisPlayer.jumpCounter >= _maxJumps)
+        if (jumpCounter >= _maxJumps)
             ThisPlayer.canJump = false;
 
         ThisPlayer.isJumping = value.started;
@@ -137,26 +115,9 @@ public class Movement : MonoBehaviour
     {
         speedLastFrame = speed;
         Vector3 localVelocity = transform.InverseTransformDirection(ThisPlayer.rigidBody.velocity);
-        targetSpeed = new(ThisPlayer.speed * movementInput.x, ThisPlayer.speed * movementInput.y);
+        targetSpeed = new(setSpeed * movementInput.x, setSpeed * movementInput.y);
         targetAcceleration = new(_acceleration * movementInput.x, _acceleration * movementInput.y);
         speed = Vector2.zero;
-
-        //if (localVelocity.x > ThisPlayer.speed)
-        //    speed.x -= localVelocity.x - ThisPlayer.speed;
-        //else if (localVelocity.x < -ThisPlayer.speed)
-        //    speed.x += localVelocity.x + ThisPlayer.speed;
-        //else
-        //    speed.x = _acceleration;
-
-        //if (localVelocity.z > ThisPlayer.speed)
-        //    speed.y -= localVelocity.z - ThisPlayer.speed;
-        //else if (localVelocity.z < -ThisPlayer.speed)
-        //    speed.y += localVelocity.z + ThisPlayer.speed;
-        //else
-        //    speed.y = _acceleration;
-
-        //targetAcceleration.x = movementInput.x < 0.0f ? -targetAcceleration.x : targetAcceleration.x;
-        //targetAcceleration.y = movementInput.y < 0.0f ? -targetAcceleration.y : targetAcceleration.y;
 
         if (Mathf.Abs(localVelocity.z + (targetAcceleration.y * Time.deltaTime)) >= targetSpeed.y)
             speed.y = (targetSpeed.y - localVelocity.z) / Time.deltaTime;
@@ -170,37 +131,26 @@ public class Movement : MonoBehaviour
 
         speed = Vector2.Lerp(speedLastFrame, speed, _inputSmoothing);
 
-        Debug.Log(localVelocity);
-
         ThisPlayer.rigidBody.velocity += transform.TransformDirection(new Vector3(
             speed.x * Time.deltaTime,
             0.0f,
             speed.y * Time.deltaTime));
     }
-
     void Stop() => ThisPlayer.rigidBody.velocity = Vector3.SmoothDamp(
                         ThisPlayer.rigidBody.velocity,
                         new Vector3(0.0f, ThisPlayer.rigidBody.velocity.y, 0.0f),
                         ref stopVelocity, _deceleration);
     void Sprint()
     {
-        ThisPlayer.DrainStamina(Time.deltaTime * _sprintStaminaDrainRate);
-        ThisPlayer.speed = _sprintSpeed;
-        _currentFov = _defaultFov + _sprintFov;
+        stats.Tire(Time.deltaTime * _sprintStaminaDrainRate);
+        setSpeed = _sprintSpeed;
+        currentFov = _defaultFov + _sprintFov;
     }
     void Jump(float jumpForce, float staminaLoss)
     {
         ThisPlayer.rigidBody.AddForce(Vector3.up * jumpForce);
-        ThisPlayer.DrainStamina(staminaLoss);
-        ThisPlayer.jumpCounter++;
+        stats.Tire(staminaLoss);
+        jumpCounter++;
     }
     #endregion
-
-    void SetPlayer(Player player)
-    {
-        if (player != GetComponent<PlayerInstance>().ThisPlayer)
-            return;
-
-        ThisPlayer = player;
-    }
 }

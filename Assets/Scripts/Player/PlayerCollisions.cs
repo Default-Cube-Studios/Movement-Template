@@ -3,11 +3,12 @@ using UnityEngine;
 
 [AddComponentMenu("Player/Collisions")]
 [DisallowMultipleComponent]
-public class Collisions : MonoBehaviour
+public class PlayerCollisions : PlayerScript
 {
     #region Variable Initials
-    private Player ThisPlayer;
-    [Tooltip("A set of tags attatched to platforms and ground objects")][SerializeField] private string[] _groundTags;
+    [SerializeField][Tooltip("A set of tags attatched to platforms and ground objects")] private string[] _groundTags;
+    [SerializeField][Tooltip("A set of layers platforms and ground objects are assigned")] private string[] _groundLayers;
+    [SerializeField] PlayerMovement movement;
     private HashSet<GameObject> _touchingGameObjects = new();
     #endregion
 
@@ -23,32 +24,27 @@ public class Collisions : MonoBehaviour
         GroundCheck();
         _touchingGameObjects.Clear();
     }
-    private void OnEnable() => Player.PlayerSelected += SetPlayer;
-    private void OnDisable() => Player.PlayerSelected -= SetPlayer;
     #endregion
 
     bool GroundCheck()
     {
         foreach (GameObject gameObject in _touchingGameObjects)
+        {
             foreach (string tag in _groundTags)
-                if (gameObject.CompareTag(tag))
-                {
-                    ThisPlayer.jumpCounter = 0;
-                    ThisPlayer.isGrounded = true;
-                    ThisPlayer.canJump = true;
-                    return true;
-                }
+                if (gameObject.CompareTag(tag)) return OnFall();
+            foreach (string layer in _groundLayers)
+                if (gameObject.layer == LayerMask.NameToLayer(layer)) return OnFall();
+        }
 
         ThisPlayer.isGrounded = false;
         return false;
-    }
 
-
-    void SetPlayer(Player player)
-    {
-        if (player != GetComponentInParent<PlayerInstance>().ThisPlayer)
-            return;
-
-        ThisPlayer = player;
+        bool OnFall()
+        {
+            movement.jumpCounter = 0;
+            ThisPlayer.isGrounded = true;
+            ThisPlayer.canJump = true;
+            return true;
+        }
     }
 }

@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 3393766566940283116}
   - component: {fileID: 3393766566940283104}
   - component: {fileID: 3393766566940283112}
+  - component: {fileID: 7747255078233664365}
   - component: {fileID: 3393766566940283106}
-  - component: {fileID: 986028191381816541}
   - component: {fileID: 3393766566940283105}
   m_Layer: 3
   m_Name: Player
@@ -84,24 +84,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ThisPlayer:
     playerManagerIndex: 0
+    stamina: 1
+    health: 1
+    gameObject: {fileID: 3393766566940283111}
+    transform: {fileID: 3393766566940283118}
+    rigidBody: {fileID: 3393766566940283104}
+    mainCamera: {fileID: 3393766567946331807}
+    isAlive: 1
+    isGrounded: 1
+    isIdle: 1
+    isJumping: 0
+    canJump: 1
+    destroyed: 0
+    activePowerUps: []
+  _selectedOnAwake: 1
+  _playerPrefab: {fileID: 3393766566940283111}
+--- !u!114 &7747255078233664365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3393766566940283111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cea13c04516c9f44aae6429a28ffe75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ThisPlayer:
+    playerManagerIndex: 0
     stamina: 0
     health: 0
-    speed: 0
-    jumpCounter: 0
+    gameObject: {fileID: 0}
+    transform: {fileID: 0}
+    rigidBody: {fileID: 0}
+    mainCamera: {fileID: 0}
     isAlive: 0
     isGrounded: 0
     isIdle: 0
     isJumping: 0
     canJump: 0
-    gameObject: {fileID: 0}
-    transform: {fileID: 0}
-    rigidBody: {fileID: 0}
-    mainCamera: {fileID: 0}
-    Scripts: []
     destroyed: 0
     activePowerUps: []
-  _selectedOnAwake: 1
-  _playerPrefab: {fileID: 3393766566940283111}
+  _healthRegenRate: 0.01
+  _minFallForce: 9
+  _maxFallForce: 12
+  _staminaRegenRate: 0.1
 --- !u!114 &3393766566940283106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -114,6 +142,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afca2c248d4502c46a5d8550405bc321, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ThisPlayer:
+    playerManagerIndex: 0
+    stamina: 0
+    health: 0
+    gameObject: {fileID: 0}
+    transform: {fileID: 0}
+    rigidBody: {fileID: 0}
+    mainCamera: {fileID: 0}
+    isAlive: 0
+    isGrounded: 0
+    isIdle: 0
+    isJumping: 0
+    canJump: 0
+    destroyed: 0
+    activePowerUps: []
+  stats: {fileID: 7747255078233664365}
   _lowStaminaSpeed: 1
   _walkSpeed: 5
   _sprintSpeed: 12
@@ -123,32 +167,15 @@ MonoBehaviour:
   _fovSpeed: 0.3
   _defaultFov: 90
   _sprintFov: 30
-  _currentFov: 0
   _infiniteJump: 0
   _jumpForce: 300
   _lowStaminaJumpForce: 100
   _maxJumps: 3
-  _moveStaminaDrainRate: 0.03
-  _sprintStaminaDrainRate: 0.05
-  _jumpStaminaLoss: 0.1
-  _staminaRegenRate: 0.1
+  _moveStaminaDrainRate: 0.01
+  _sprintStaminaDrainRate: 0.03
+  _jumpStaminaLoss: 0.075
   _mouseSmoothing: 7.5
-  _damageRegenRate: 0.03
-  _minFallForce: 6
-  _maxFallForce: 8.75
-  _forceExponent: 10
---- !u!114 &986028191381816541
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3393766566940283111}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4fe04dd936bdd44691232ac815f3341, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  jumpCounter: 0
 --- !u!114 &3393766566940283105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -539,7 +566,7 @@ GameObject:
   m_Component:
   - component: {fileID: 756165039516089272}
   - component: {fileID: 805967948916873052}
-  - component: {fileID: 9202667689645884792}
+  - component: {fileID: 1416256362833351509}
   m_Layer: 3
   m_Name: Collision Detector
   m_TagString: Untagged
@@ -576,7 +603,7 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &9202667689645884792
+--- !u!114 &1416256362833351509
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -588,5 +615,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 744eb0b7d197b3e46a3f92e48eb49f44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ThisPlayer:
+    playerManagerIndex: 0
+    stamina: 0
+    health: 0
+    gameObject: {fileID: 0}
+    transform: {fileID: 0}
+    rigidBody: {fileID: 0}
+    mainCamera: {fileID: 0}
+    isAlive: 0
+    isGrounded: 0
+    isIdle: 0
+    isJumping: 0
+    canJump: 0
+    destroyed: 0
+    activePowerUps: []
   _groundTags:
   - Platforms
+  _groundLayers:
+  - Environment
+  movement: {fileID: 3393766566940283106}

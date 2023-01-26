@@ -12,7 +12,6 @@ public class PlayerInstance : MonoBehaviour
     #region Variable Initials
     [Tooltip("This player instance")] public Player ThisPlayer;
     public bool _selectedOnAwake;
-    private bool setUp;
 
     public GameObject _playerPrefab;
     public static GameObject playerGameObject;
@@ -21,23 +20,11 @@ public class PlayerInstance : MonoBehaviour
     void Awake()
     {
         playerGameObject = _playerPrefab;
-        SetupPlayer();
-    }
-
-    void SetupPlayer()
-    {
-        if (setUp)
-            return;
 
         ThisPlayer = new(gameObject);
-
-        foreach (MonoBehaviour script in GetComponents<MonoBehaviour>())
-            ThisPlayer.Scripts.Add(script);
-
         Player.InitializePlayer(ThisPlayer);
         if (_selectedOnAwake)
             Player.SelectPlayer(ThisPlayer.playerManagerIndex);
-        setUp = true;
     }
 
     public void Destroy() => Destroy(ThisPlayer.gameObject);
@@ -53,11 +40,13 @@ public class PlayerInstance : MonoBehaviour
         //    Player.DestroyPlayer(ThisPlayer);
     }
 
-    //private void OnDestroy()
-    //{
-    //    if (!ThisPlayer.destroyed)
-    //        Player.DestroyPlayer(ThisPlayer);
-    //}
+    private void OnDestroy()
+    {
+        if (!ThisPlayer.destroyed)
+            Player.DestroyPlayer(ThisPlayer);
+        foreach (var script in ThisPlayer.Scripts)
+            Destroy(script.Value);
+    }
 }
 
 [Serializable]
@@ -68,60 +57,26 @@ public class Player
     [Header("Stats")]
     public float stamina = 1.0f;
     public float health = 1.0f;
-    [Header("Movement")]
-    public float speed;
-    public int jumpCounter;
-    [Header("Functions")]
-    public bool isAlive = true;
-    public bool isGrounded = true;
-    public bool isIdle = true;
-    public bool isJumping = false;
-    public bool canJump = true;
     [Header("Components")]
     public GameObject gameObject;
     public Transform transform;
     public Rigidbody rigidBody;
     public Camera mainCamera;
+    [Header("States")]
+    public bool isAlive = true;
+    public bool isGrounded = true;
+    public bool isIdle = true;
+    public bool isJumping = false;
+    public bool canJump = true;
     [Space]
-    public List<MonoBehaviour> Scripts = new();
-    [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStatus;
+    public Dictionary<int, PlayerScript> Scripts = new();
+    [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStateChanged;
     [HideInInspector] public bool destroyed;
     [Header("Items")]
     public List<PowerUpType> activePowerUps = new();
     #endregion
 
-    #region Stamina
-    public void DrainStamina(float staminaLoss)
-    {
-        if (stamina > staminaLoss)
-            stamina -= staminaLoss;
-        else
-            stamina = 0.0f;
-    }
-    public void RegenStamina(float staminaGain)
-    {
-        if (stamina + staminaGain < 1.0f)
-            stamina += staminaGain;
-        else
-            stamina = 1.0f;
-    }
-    #endregion
-
-    #region Health
-    public void Damage(float damageAmount)
-    {
-        if (health > damageAmount)
-            health -= damageAmount;
-        else
-            Kill();
-    }
-    public void Heal(float gainAmount)
-    {
-        if (health + gainAmount < 1.0f)
-            health += gainAmount;
-        else
-            health = 1.0f;
-    }
+    #region Status
     public void Kill()
     {
         rigidBody.constraints = RigidbodyConstraints.None;
@@ -129,15 +84,15 @@ public class Player
         health = 0.0f;
         stamina = 0.0f;
 
-        gameObject.GetComponent<Movement>().enabled = false;
-        gameObject.GetComponentInChildren<Collisions>().enabled = false;
+        this.GetMonoBehaviour<PlayerMovement>().enabled = false;
+        this.GetMonoBehaviour<PlayerCollisions>().enabled = false;
         gameObject.GetComponent<PlayerInput>().enabled = false;
         transform.Rotate(transform.eulerAngles + new Vector3(1.0f, 1.0f, 1.0f));
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        OnStatus?.Invoke(false);
+        OnStateChanged?.Invoke(false);
     }
     public void Respawn()
     {
@@ -146,21 +101,21 @@ public class Player
         health = 1.0f;
         stamina = 1.0f;
 
-        gameObject.GetComponent<Movement>().enabled = true;
-        gameObject.GetComponentInChildren<Collisions>().enabled = true;
+        this.GetMonoBehaviour<PlayerMovement>().enabled = true;
+        this.GetMonoBehaviour<PlayerCollisions>().enabled = true;
         gameObject.GetComponent<PlayerInput>().enabled = true;
         transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        OnStatus?.Invoke(true);
+        OnStateChanged?.Invoke(true);
     }
     #endregion
 
     #region Player Manager
     [Tooltip("The currently active player")] public static Player ActivePlayer;
-    [Tooltip("A list of all selectable players")] public static List<Player> InitializedPlayer = new();
+    [Tooltip("A list of all selectable players")] public static List<Player> InitializedPlayers = new();
 
     public static event Action<Player> PlayerInitialized;
     public static event Action<Player> PlayerSelected;
@@ -168,20 +123,20 @@ public class Player
 
     public static int InitializePlayer(Player player)
     {
-        if (InitializedPlayer.Count > 0 && InitializedPlayer.Contains(player))
-            return InitializedPlayer.IndexOf(player);
+        if (InitializedPlayers.Count > 0 && InitializedPlayers.Contains(player))
+            return InitializedPlayers.IndexOf(player);
 
-        InitializedPlayer.Add(player);
-        player.playerManagerIndex = InitializedPlayer.Count - 1;
+        InitializedPlayers.Add(player);
+        player.playerManagerIndex = InitializedPlayers.Count - 1;
         PlayerInitialized?.Invoke(player);
-        return InitializedPlayer.Count - 1;
+        return InitializedPlayers.Count - 1;
     }
 
     public static void SelectPlayer(Player player)
     {
-        if (!InitializedPlayer.Contains(player)) return;
+        if (!InitializedPlayers.Contains(player)) return;
 
-        foreach (Player thisPlayer in InitializedPlayer)
+        foreach (Player thisPlayer in InitializedPlayers)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
                 script.enabled = false;
@@ -190,7 +145,7 @@ public class Player
             thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
         }
 
-        if (!InitializedPlayer.Contains(player))
+        if (!InitializedPlayers.Contains(player))
             InitializePlayer(player);
 
         if (ActivePlayer == player)
@@ -206,9 +161,9 @@ public class Player
     }
     public static void SelectPlayer(int index)
     {
-        if (InitializedPlayer.Count <= index) return;
+        if (InitializedPlayers.Count <= index) return;
 
-        foreach (Player thisPlayer in InitializedPlayer)
+        foreach (Player thisPlayer in InitializedPlayers)
         {
             foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
                 script.enabled = false;
@@ -218,39 +173,39 @@ public class Player
             thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
         }
 
-        if (ActivePlayer == InitializedPlayer.ElementAt(index))
+        if (ActivePlayer == InitializedPlayers.ElementAt(index))
             return;
 
-        ActivePlayer = InitializedPlayer.ElementAt(index);
+        ActivePlayer = InitializedPlayers.ElementAt(index);
 
-        foreach (MonoBehaviour script in InitializedPlayer.ElementAt(index).gameObject.GetComponents<MonoBehaviour>())
+        foreach (MonoBehaviour script in InitializedPlayers.ElementAt(index).gameObject.GetComponents<MonoBehaviour>())
             script.enabled = true;
 
-        InitializedPlayer.ElementAt(index).rigidBody.isKinematic = false;
-        PlayerSelected?.Invoke(InitializedPlayer.ElementAt(index));
+        InitializedPlayers.ElementAt(index).rigidBody.isKinematic = false;
+        PlayerSelected?.Invoke(InitializedPlayers.ElementAt(index));
     }
     public static void DestroyPlayer(Player player)
     {
-        if (!InitializedPlayer.Contains(player)) return;
+        if (!InitializedPlayers.Contains(player)) return;
 
-        player.gameObject.GetComponent<PlayerInstance>().Destroy();
-        InitializedPlayer.Remove(player);
-        SelectPlayer(InitializedPlayer.Count - 1);
+        InitializedPlayers.Remove(player);
+        if (InitializedPlayers.Count - 1 > 0) 
+            SelectPlayer(InitializedPlayers.Count - 1);
         player.destroyed = true;
         PlayerDestroyed?.Invoke(player);
     }
     public static void DestroyPlayer(int index)
     {
-        if (InitializedPlayer.Count <= index) return;
+        if (InitializedPlayers.Count <= index) return;
 
-        InitializedPlayer.ElementAt(index).gameObject.GetComponent<PlayerInstance>().Destroy();
-        InitializedPlayer.RemoveAt(index);
-        SelectPlayer(InitializedPlayer.Count - 1);
-        InitializedPlayer.ElementAt(index).destroyed = true;
-        PlayerDestroyed?.Invoke(InitializedPlayer.ElementAt(index));
+        InitializedPlayers.RemoveAt(index);
+        SelectPlayer(InitializedPlayers.Count - 1);
+        InitializedPlayers.ElementAt(index).destroyed = true;
+        PlayerDestroyed?.Invoke(InitializedPlayers.ElementAt(index));
     }
     #endregion
 
+    public Player() { }
     public Player(GameObject playerGameObject)
     {
         gameObject = playerGameObject;
