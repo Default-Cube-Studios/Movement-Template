@@ -117,17 +117,16 @@ public class PlayerMovement : PlayerScript
         targetAcceleration = new(_acceleration * movementInput.x, _acceleration * movementInput.y);
         speed = Vector2.zero;
 
-        if (Mathf.Abs(localVelocity.z + (targetAcceleration.y * Time.deltaTime)) >= targetSpeed.y)
+        if (Mathf.Abs(localVelocity.z + (targetAcceleration.y * Time.deltaTime)) >= Mathf.Abs(targetSpeed.y))
             speed.y = (targetSpeed.y - localVelocity.z) / Time.deltaTime;
         else
             speed.y = targetAcceleration.y;
 
-        if (Mathf.Abs(localVelocity.x + (targetAcceleration.x * Time.deltaTime)) >= targetSpeed.x)
+        if (Mathf.Abs(localVelocity.x + (targetAcceleration.x * Time.deltaTime)) >= Mathf.Abs(targetSpeed.x))
             speed.x = (targetSpeed.x - localVelocity.x) / Time.deltaTime;
         else
             speed.x = targetAcceleration.x;
 
-        Debug.Log(targetAcceleration);
         speed = Vector2.Lerp(speedLastFrame, speed, _inputSmoothing);
 
         ThisPlayer.rigidBody.velocity += transform.TransformDirection(new Vector3(
