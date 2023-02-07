@@ -6,9 +6,11 @@ using UnityEngine;
 public class PlayerCollisions : PlayerScript
 {
     #region Variable Initials
+    [Header("Dependencies")]
+    [SerializeField] PlayerMovement movement;
+    [Header("Filters")]
     [SerializeField][Tooltip("A set of tags attatched to platforms and ground objects")] private string[] _groundTags;
     [SerializeField][Tooltip("A set of layers platforms and ground objects are assigned")] private string[] _groundLayers;
-    [SerializeField] PlayerMovement movement;
     private HashSet<GameObject> _touchingGameObjects = new();
     #endregion
 

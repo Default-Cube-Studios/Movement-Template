@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : PlayerScript
 {
     #region Variable Initials
-    [Header("Dependacies")]
+    [Header("Dependencies")]
     [SerializeField] PlayerStats stats;
     [Header("Movement")]
     [Tooltip("The player speed while low on stamina")] public float _lowStaminaSpeed;
@@ -50,17 +50,15 @@ public class PlayerMovement : PlayerScript
     #endregion
 
     #region Unity Events
-    public override void Start()
+    public void Start()
     {
-        base.Start();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        stats = ThisPlayer.GetScript<PlayerStats>();
     }
     void Update()
     {
         Look();
-        ThisPlayer.isIdle = movementInput == Vector2.zero ? true : false;
+        ThisPlayer.isIdle = movementInput == Vector2.zero;
         currentFov = _defaultFov;
 
         if (ThisPlayer.isIdle) Stop();
@@ -129,6 +127,7 @@ public class PlayerMovement : PlayerScript
         else
             speed.x = targetAcceleration.x;
 
+        Debug.Log(targetAcceleration);
         speed = Vector2.Lerp(speedLastFrame, speed, _inputSmoothing);
 
         ThisPlayer.rigidBody.velocity += transform.TransformDirection(new Vector3(

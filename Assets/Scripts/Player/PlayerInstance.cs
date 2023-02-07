@@ -10,42 +10,24 @@ using UnityEngine.InputSystem;
 public class PlayerInstance : MonoBehaviour
 {
     #region Variable Initials
-    [Tooltip("This player instance")] public Player ThisPlayer;
+    [Tooltip("This player instance")] public Player ThisPlayer { get; private set; }
     public bool _selectedOnAwake;
-
-    public GameObject _playerPrefab;
-    public static GameObject playerGameObject;
+    [HideInInspector] public bool loaded;
     #endregion
 
-    void Awake()
+    public void Awake()
     {
-        playerGameObject = _playerPrefab;
-
+        loaded = true;
         ThisPlayer = new(gameObject);
-        Player.InitializePlayer(ThisPlayer);
-        if (_selectedOnAwake)
-            Player.SelectPlayer(ThisPlayer.playerManagerIndex);
+        Player.InitializePlayer(ThisPlayer, _selectedOnAwake);
     }
 
     public void Destroy() => Destroy(ThisPlayer.gameObject);
     public void Destroy(float delay) => Destroy(ThisPlayer.gameObject, delay);
 
-    public static Player CreatePlayer(Vector3 position) => Instantiate(playerGameObject, position, Quaternion.identity).GetComponent<PlayerInstance>().ThisPlayer;
-
-    private void OnDisable()
-    {
-        // WARNING! The code below causes a memory leak
-
-        //if (!ThisPlayer.destroyed && setUp)
-        //    Player.DestroyPlayer(ThisPlayer);
-    }
-
     private void OnDestroy()
     {
-        if (!ThisPlayer.destroyed)
-            Player.DestroyPlayer(ThisPlayer);
-        foreach (var script in ThisPlayer.Scripts)
-            Destroy(script.Value);
+        if (!ThisPlayer.destroyed) Player.DestroyPlayer(ThisPlayer);
     }
 }
 
@@ -69,14 +51,13 @@ public class Player
     public bool isJumping = false;
     public bool canJump = true;
     [Space]
-    public Dictionary<int, PlayerScript> Scripts = new();
+    public Dictionary<int, PlayerScript> Scripts;
     [Tooltip("The event called when the player dies or revives")] public static event Action<bool> OnStateChanged;
     [HideInInspector] public bool destroyed;
-    [Header("Items")]
     public List<PowerUpType> activePowerUps = new();
     #endregion
 
-    #region Status
+    #region States
     public void Kill()
     {
         rigidBody.constraints = RigidbodyConstraints.None;
@@ -84,8 +65,8 @@ public class Player
         health = 0.0f;
         stamina = 0.0f;
 
-        this.GetMonoBehaviour<PlayerMovement>().enabled = false;
-        this.GetMonoBehaviour<PlayerCollisions>().enabled = false;
+        this.GetScript<PlayerMovement>().enabled = false;
+        this.GetScript<PlayerCollisions>().enabled = false;
         gameObject.GetComponent<PlayerInput>().enabled = false;
         transform.Rotate(transform.eulerAngles + new Vector3(1.0f, 1.0f, 1.0f));
 
@@ -101,8 +82,8 @@ public class Player
         health = 1.0f;
         stamina = 1.0f;
 
-        this.GetMonoBehaviour<PlayerMovement>().enabled = true;
-        this.GetMonoBehaviour<PlayerCollisions>().enabled = true;
+        this.GetScript<PlayerMovement>().enabled = true;
+        this.GetScript<PlayerCollisions>().enabled = true;
         gameObject.GetComponent<PlayerInput>().enabled = true;
         transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
 
@@ -114,103 +95,133 @@ public class Player
     #endregion
 
     #region Player Manager
-    [Tooltip("The currently active player")] public static Player ActivePlayer;
-    [Tooltip("A list of all selectable players")] public static List<Player> InitializedPlayers = new();
+    private static Player activePlayer;
+    private static List<Player> initializedPlayers;
 
-    public static event Action<Player> PlayerInitialized;
-    public static event Action<Player> PlayerSelected;
-    public static event Action<Player> PlayerDestroyed;
+    [Tooltip("The currently active player")]
+    public static Player ActivePlayer
+    {
+        get
+        {
+            if (activePlayer == null)
+                if (InitializedPlayers.Count <= 0)
+                    Debug.LogWarning("No players have been initialized!");
+                else activePlayer = InitializedPlayers.ElementAt(0);
+            return activePlayer;
+        }
+        private set => activePlayer = value;
+    }
+    [Tooltip("A list of all selectable players")]
+    public static List<Player> InitializedPlayers
+    {
+        get
+        {
+            if (initializedPlayers == null) initializedPlayers = new();
+            return initializedPlayers;
+        }
+        private set => initializedPlayers = value;
+    }
 
-    public static int InitializePlayer(Player player)
+    public event Action PlayerInitialized;
+    public event Action PlayerSelected;
+    public event Action PlayerDestroyed;
+
+    public static int InitializePlayer(Player player, bool select)
     {
         if (InitializedPlayers.Count > 0 && InitializedPlayers.Contains(player))
             return InitializedPlayers.IndexOf(player);
 
         InitializedPlayers.Add(player);
-        player.playerManagerIndex = InitializedPlayers.Count - 1;
-        PlayerInitialized?.Invoke(player);
-        return InitializedPlayers.Count - 1;
-    }
+        player.playerManagerIndex = InitializedPlayers.Count;
 
-    public static void SelectPlayer(Player player)
-    {
-        if (!InitializedPlayers.Contains(player)) return;
-
-        foreach (Player thisPlayer in InitializedPlayers)
+        foreach (var script in player.gameObject.GetComponentsInChildren<PlayerScript>())
         {
-            foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
-                script.enabled = false;
-
-            thisPlayer.rigidBody.isKinematic = true;
-            thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
+            if (script.TryGetComponent(out PlayerInstance playerReference))
+                script.ThisPlayer = playerReference.ThisPlayer;
+            else if (script.transform.parent.gameObject.TryGetComponent(out playerReference))
+                script.ThisPlayer = playerReference.ThisPlayer;
+            else
+                throw new MissingComponentException($"No players could be found on {script.gameObject}" +
+                    $" for {script} or its direct parent");
+            script.loaded = true;
+            if (!player.Scripts.ContainsKey(script.ScriptId) && script.isActiveAndEnabled) script.OnEnable();
         }
 
+        player.PlayerInitialized?.Invoke();
+        if (select) SelectPlayer(player);
+        return InitializedPlayers.Count;
+    }
+    public static void SelectPlayer(Player player)
+    {
         if (!InitializedPlayers.Contains(player))
-            InitializePlayer(player);
+            player = InitializedPlayers.ElementAt(InitializePlayer(player, false));
+        if (ActivePlayer == player) return;
 
-        if (ActivePlayer == player)
-            return;
+        foreach (var script in ActivePlayer.Scripts.Values.ToArray())
+            script.enabled = false;
+
+        ActivePlayer.mainCamera.GetComponent<AudioListener>().enabled = false;
+        ActivePlayer.rigidBody.isKinematic = true;
+
+        foreach (var script in player.Scripts)
+            if (script.Value.canEnable) script.Value.enabled = true;
 
         ActivePlayer = player;
-
-        foreach (MonoBehaviour script in player.gameObject.GetComponents<MonoBehaviour>())
-            script.enabled = true;
-
         player.rigidBody.isKinematic = false;
-        PlayerSelected?.Invoke(player);
+        player.mainCamera.GetComponent<AudioListener>().enabled = true;
+        player.PlayerSelected?.Invoke();
     }
     public static void SelectPlayer(int index)
     {
-        if (InitializedPlayers.Count <= index) return;
+        if (InitializedPlayers.Count <= index)
+            throw new IndexOutOfRangeException("A player selection was made at the index " +
+                $"{index}, but only {InitializedPlayers.Count} players have been initialized!");
+        Player player = InitializedPlayers.ElementAt(index);
+        if (ActivePlayer == player) return;
 
-        foreach (Player thisPlayer in InitializedPlayers)
-        {
-            foreach (MonoBehaviour script in thisPlayer.gameObject.GetComponents<MonoBehaviour>())
-                script.enabled = false;
+        foreach (var script in ActivePlayer.Scripts)
+            if (script.Value.canDisable) script.Value.enabled = false;
 
-            thisPlayer.rigidBody.isKinematic = true;
+        ActivePlayer.mainCamera.GetComponent<AudioListener>().enabled = false;
+        ActivePlayer.rigidBody.isKinematic = true;
 
-            thisPlayer.gameObject.GetComponent<PlayerInstance>().enabled = true;
-        }
+        foreach (var script in player.Scripts)
+            if (script.Value.canEnable) script.Value.enabled = true;
 
-        if (ActivePlayer == InitializedPlayers.ElementAt(index))
-            return;
-
-        ActivePlayer = InitializedPlayers.ElementAt(index);
-
-        foreach (MonoBehaviour script in InitializedPlayers.ElementAt(index).gameObject.GetComponents<MonoBehaviour>())
-            script.enabled = true;
-
-        InitializedPlayers.ElementAt(index).rigidBody.isKinematic = false;
-        PlayerSelected?.Invoke(InitializedPlayers.ElementAt(index));
+        ActivePlayer = player;
+        player.rigidBody.isKinematic = false;
+        player.mainCamera.GetComponent<AudioListener>().enabled = true;
+        player.PlayerSelected?.Invoke();
     }
     public static void DestroyPlayer(Player player)
     {
         if (!InitializedPlayers.Contains(player)) return;
 
         InitializedPlayers.Remove(player);
-        if (InitializedPlayers.Count - 1 > 0) 
+        if (InitializedPlayers.Count > 0)
             SelectPlayer(InitializedPlayers.Count - 1);
         player.destroyed = true;
-        PlayerDestroyed?.Invoke(player);
+        player.PlayerDestroyed?.Invoke();
     }
     public static void DestroyPlayer(int index)
     {
+        Player player = InitializedPlayers.ElementAt(index);
         if (InitializedPlayers.Count <= index) return;
 
-        InitializedPlayers.RemoveAt(index);
-        SelectPlayer(InitializedPlayers.Count - 1);
-        InitializedPlayers.ElementAt(index).destroyed = true;
-        PlayerDestroyed?.Invoke(InitializedPlayers.ElementAt(index));
+        InitializedPlayers.Remove(player);
+        if (InitializedPlayers.Count > 0)
+            SelectPlayer(InitializedPlayers.Count - 1);
+        player.destroyed = true;
+        player.PlayerDestroyed?.Invoke();
     }
     #endregion
 
-    public Player() { }
     public Player(GameObject playerGameObject)
     {
         gameObject = playerGameObject;
         transform = playerGameObject.GetComponent<Transform>();
         rigidBody = playerGameObject.GetComponent<Rigidbody>();
         mainCamera = playerGameObject.GetComponentInChildren<Camera>();
+        Scripts = new();
     }
 }

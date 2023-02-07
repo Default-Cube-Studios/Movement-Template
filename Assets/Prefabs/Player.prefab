@@ -98,7 +98,6 @@ MonoBehaviour:
     destroyed: 0
     activePowerUps: []
   _selectedOnAwake: 1
-  _playerPrefab: {fileID: 3393766566940283111}
 --- !u!114 &7747255078233664365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -126,6 +125,7 @@ MonoBehaviour:
     canJump: 0
     destroyed: 0
     activePowerUps: []
+  canEnable: 1
   _healthRegenRate: 0.01
   _minFallForce: 9
   _maxFallForce: 12
@@ -157,6 +157,7 @@ MonoBehaviour:
     canJump: 0
     destroyed: 0
     activePowerUps: []
+  canEnable: 1
   stats: {fileID: 7747255078233664365}
   _lowStaminaSpeed: 1
   _walkSpeed: 5
@@ -370,7 +371,7 @@ Camera:
     height: 1
   near clip plane: 0.15
   far clip plane: 1000
-  field of view: 80
+  field of view: 150
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -486,7 +487,7 @@ GameObject:
   - component: {fileID: 3393766568205081510}
   m_Layer: 3
   m_Name: Player Mesh
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -569,7 +570,7 @@ GameObject:
   - component: {fileID: 1416256362833351509}
   m_Layer: 3
   m_Name: Collision Detector
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -630,8 +631,9 @@ MonoBehaviour:
     canJump: 0
     destroyed: 0
     activePowerUps: []
+  canEnable: 1
+  movement: {fileID: 3393766566940283106}
   _groundTags:
   - Platforms
   _groundLayers:
   - Environment
-  movement: {fileID: 3393766566940283106}
